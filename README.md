@@ -6,7 +6,7 @@ local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
 local Window = Library:CreateWindow({
     Title = "FTF Eclipse",
-    Footer = "version: 1.5",
+    Footer = "version: 2.1",
     Icon = "97649528750741",
     CornerRadius = 6,
     NotifySide = "Right",
@@ -14,16 +14,17 @@ local Window = Library:CreateWindow({
     SearchbarSize = UDim2.fromScale(0.9, 1),
     Size = UDim2.fromOffset(670, 570)
 })
--- ================= TABS =================
+
 local Tabs = {
-    Esp = Window:AddTab("Highlights", "eye", "All Highlights"),
-    Advanced = Window:AddTab("Advanced", "cog", "Extras Scripts"),
-    Visual = Window:AddTab("Visual", "glasses", "Humanoid Modify"),
-    Progress = Window:AddTab("Progress", "clock-4", "All progress"),
-    Textures = Window:AddTab("Textures", "image", "Map & Double Jump Effects"),
-    Cloud = Window:AddTab("Fog", "cloudy", "Legit Settings"),
-    CrossHair = Window:AddTab("CrossHair", "crosshair", "Custom Cursors"),
-    ["UI Settings"] = Window:AddTab("UI Settings", "palette", "Configuration Of UI"),
+    Esp = Window:AddTab("Highlights", "flame", "Visual outlines to highlights players & objects"),
+    Setting = Window:AddTab("Misc", "box", "Extra functionality"),
+    Visual = Window:AddTab("Profile", "telescope", "Adjust FOV, camera and nickname visuals"),
+    Progress = Window:AddTab("Progress", "clock-fading", "progress information for objects and humanoids"),
+    Textures = Window:AddTab("Textures", "map", "Texture and material customization tools"),
+    Cloud = Window:AddTab("Atmosphere", "cloudy", "Customize fog, shadows and environmental visuals"),
+    CrossHair = Window:AddTab("CrossHair", "mouse-pointer", "Custom Cursors"),
+    Sound = Window:AddTab("Sounds", "list-music", "Distorted sounds & All sounds characters"),
+    ["UI Settings"] = Window:AddTab("UI Settings", "palette", "Configuration UI"),
 }
 
 local function getBeast()
@@ -56,14 +57,13 @@ local function aplicarHighlight(obj, cor)
 
     elseif modoAtual == "Fill" then
         highlight.FillTransparency = 0.4
-        highlight.OutlineTransparency = 0.5
+        highlight.OutlineTransparency = 0
         highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
         highlight.FillColor = cor
     end
 end
 
--- ================= HIGHLIGHTS OBJECTS =================
-local EspBox = Tabs.Esp:AddLeftGroupbox("Esp for Objects", "monitor")
+local EspBox = Tabs.Esp:AddLeftGroupbox("Objects", "monitor")
 
 local computerHighlight = false
 computerCache = {}
@@ -339,7 +339,6 @@ EspBox:AddButton("Fill", {
     end
 })
 
--- ================= HIGHLIGHTS PLAYERS =================
 local EspPlayersBox = Tabs.Esp:AddRightGroupbox("Players", "user")
 
 local playerHighlight = false
@@ -592,381 +591,6 @@ EspPlayersBox:AddToggle("Box ESP", {
     end
 })
 
-local box2dEnabled = false
-local box2dCache = {}
-
-EspPlayersBox:AddToggle("Box2D", {
-    Text = "Box 2D",
-    Default = false,
-    Callback = function(state)
-        box2dEnabled = state
-
-        if box2dEnabled then
-            box2dCache = {}
-
-            task.spawn(function()
-                while box2dEnabled do
-                    task.wait()
-
-                    pcall(function()
-                        local Players = game:GetService("Players")
-                        local Camera = workspace.CurrentCamera
-                        local LocalPlayer = Players.LocalPlayer
-
-                        for i = 1, #Players:GetPlayers() do
-                            local p = Players:GetPlayers()[i]
-
-                            if p ~= LocalPlayer and p.Character then
-                                local char = p.Character
-                                local hrp = char:FindFirstChild("HumanoidRootPart")
-                                local hum = char:FindFirstChildOfClass("Humanoid")
-
-                                if hrp and hum and hum.Health > 0 then
-                                    local pos, vis = Camera:WorldToViewportPoint(hrp.Position)
-
-                                    if vis then
-                                        local size = Vector2.new(40, 70)
-
-                                        local tl = Vector2.new(pos.X - size.X/2, pos.Y - size.Y/2)
-                                        local tr = Vector2.new(pos.X + size.X/2, pos.Y - size.Y/2)
-                                        local br = Vector2.new(pos.X + size.X/2, pos.Y + size.Y/2)
-                                        local bl = Vector2.new(pos.X - size.X/2, pos.Y + size.Y/2)
-
-                                        local box = box2dCache[p]
-
-                                        if not box then
-                                            box = {}
-                                            for i2 = 1, 4 do
-                                                local l = Drawing.new("Line")
-                                                l.Thickness = 2
-                                                l.Transparency = 1
-                                                box[i2] = l
-                                            end
-                                            box2dCache[p] = box
-                                        end
-
-                                        local pts = {tl, tr, br, bl}
-
-                                        for i2 = 1, 4 do
-                                            local l = box[i2]
-                                            l.From = pts[i2]
-                                            l.To = pts[i2 % 4 + 1]
-                                            l.Color = Color3.fromRGB(80, 255, 140)
-                                            l.Visible = true
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end)
-                end
-
-                for _, box in pairs(box2dCache) do
-                    for _, l in ipairs(box) do
-                        l:Remove()
-                    end
-                end
-
-                box2dCache = {}
-            end)
-        else
-            for _, box in pairs(box2dCache) do
-                for _, l in ipairs(box) do
-                    l:Remove()
-                end
-            end
-            box2dCache = {}
-        end
-    end
-})
-
-local box3dEnabled = false
-local box3dCache = {}
-
-EspPlayersBox:AddToggle("Box3D", {
-    Text = "Box 3D",
-    Default = false,
-    Callback = function(state)
-        box3dEnabled = state
-
-        if box3dEnabled then
-            box3dCache = {}
-
-            task.spawn(function()
-                while box3dEnabled do
-                    task.wait()
-
-                    pcall(function()
-                        local Players = game:GetService("Players")
-                        local Camera = workspace.CurrentCamera
-                        local LocalPlayer = Players.LocalPlayer
-
-                        for i = 1, #Players:GetPlayers() do
-                            local p = Players:GetPlayers()[i]
-
-                            if p ~= LocalPlayer and p.Character then
-                                local char = p.Character
-                                local hrp = char:FindFirstChild("HumanoidRootPart")
-                                local hum = char:FindFirstChildOfClass("Humanoid")
-
-                                if hrp and hum and hum.Health > 0 then
-                                    local cf = hrp.CFrame
-                                    local size = Vector3.new(4,6,4)/2
-
-                                    local corners = {
-                                        cf * CFrame.new(-size.X, size.Y, -size.Z),
-                                        cf * CFrame.new(size.X, size.Y, -size.Z),
-                                        cf * CFrame.new(size.X, size.Y, size.Z),
-                                        cf * CFrame.new(-size.X, size.Y, size.Z),
-                                        cf * CFrame.new(-size.X, -size.Y, -size.Z),
-                                        cf * CFrame.new(size.X, -size.Y, -size.Z),
-                                        cf * CFrame.new(size.X, -size.Y, size.Z),
-                                        cf * CFrame.new(-size.X, -size.Y, size.Z)
-                                    }
-
-                                    local points = {}
-                                    local visible = false
-
-                                    for i2 = 1, #corners do
-                                        local pos, vis = Camera:WorldToViewportPoint(corners[i2].Position)
-                                        points[i2] = Vector2.new(pos.X, pos.Y)
-                                        if vis then visible = true end
-                                    end
-
-                                    if visible then
-                                        local box = box3dCache[p]
-
-                                        if not box then
-                                            box = {}
-                                            for i2 = 1, 12 do
-                                                local l = Drawing.new("Line")
-                                                l.Thickness = 2
-                                                l.Transparency = 1
-                                                box[i2] = l
-                                            end
-                                            box3dCache[p] = box
-                                        end
-
-                                        local edges = {
-                                            {1,2},{2,3},{3,4},{4,1},
-                                            {5,6},{6,7},{7,8},{8,5},
-                                            {1,5},{2,6},{3,7},{4,8}
-                                        }
-
-                                        for i2, e in ipairs(edges) do
-                                            local l = box[i2]
-                                            l.From = points[e[1]]
-                                            l.To = points[e[2]]
-                                            l.Color = Color3.fromRGB(80, 255, 140)
-                                            l.Visible = true
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end)
-                end
-
-                for _, box in pairs(box3dCache) do
-                    for _, l in ipairs(box) do
-                        l:Remove()
-                    end
-                end
-
-                box3dCache = {}
-            end)
-        else
-            for _, box in pairs(box3dCache) do
-                for _, l in ipairs(box) do
-                    l:Remove()
-                end
-            end
-            box3dCache = {}
-        end
-    end
-})
-
-local linesHighlight = false
-local linesCache = {}
-
-EspPlayersBox:AddToggle("Lines", {
-    Text = "Tracer Lines",
-    Default = false,
-    Callback = function(state)
-        linesHighlight = state
-
-        if linesHighlight then
-            linesCache = {}
-
-            task.spawn(function()
-                while linesHighlight do
-                    task.wait()
-
-                    pcall(function()
-                        local Players = game:GetService("Players")
-                        local Camera = workspace.CurrentCamera
-                        local LocalPlayer = Players.LocalPlayer
-
-                        local origin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-
-                        for i = 1, #Players:GetPlayers() do
-                            local p = Players:GetPlayers()[i]
-
-                            if p ~= LocalPlayer and p.Character then
-                                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-                                local hum = p.Character:FindFirstChildOfClass("Humanoid")
-
-                                if hrp and hum and hum.Health > 0 then
-                                    local pos, vis = Camera:WorldToViewportPoint(hrp.Position)
-
-                                    if vis then
-                                        local line = linesCache[p]
-
-                                        if not line then
-                                            line = Drawing.new("Line")
-                                            line.Thickness = 1.5
-                                            line.Transparency = 1
-                                            linesCache[p] = line
-                                        end
-
-                                        line.From = origin
-                                        line.To = Vector2.new(pos.X, pos.Y)
-                                        line.Color = Color3.fromRGB(80, 255, 140)
-                                        line.Visible = true
-                                    end
-                                end
-                            end
-                        end
-                    end)
-                end
-
-                for _, v in pairs(linesCache) do
-                    if v then
-                        v:Remove()
-                    end
-                end
-
-                linesCache = {}
-            end)
-        else
-            for _, v in pairs(linesCache) do
-                if v then
-                    v:Remove()
-                end
-            end
-            linesCache = {}
-        end
-    end
-})
-
-local skeletonEnabled = false
-local skeletonCache = {}
-
-EspPlayersBox:AddToggle("Skeleton", {
-    Text = "Skeleton",
-    Default = false,
-    Callback = function(state)
-        skeletonEnabled = state
-
-        if skeletonEnabled then
-            skeletonCache = {}
-
-            task.spawn(function()
-                while skeletonEnabled do
-                    task.wait()
-
-                    pcall(function()
-                        local Players = game:GetService("Players")
-                        local Camera = workspace.CurrentCamera
-                        local LocalPlayer = Players.LocalPlayer
-
-                        local bones = {
-                            R6 = {
-                                {"Head","Torso"},{"Torso","Left Arm"},{"Torso","Right Arm"},
-                                {"Torso","Left Leg"},{"Torso","Right Leg"}
-                            },
-                            R15 = {
-                                {"UpperTorso","Head"},{"UpperTorso","LowerTorso"},
-                                {"UpperTorso","LeftUpperArm"},{"LeftUpperArm","LeftLowerArm"},{"LeftLowerArm","LeftHand"},
-                                {"UpperTorso","RightUpperArm"},{"RightUpperArm","RightLowerArm"},{"RightLowerArm","RightHand"},
-                                {"LowerTorso","LeftUpperLeg"},{"LeftUpperLeg","LeftLowerLeg"},{"LeftLowerLeg","LeftFoot"},
-                                {"LowerTorso","RightUpperLeg"},{"RightUpperLeg","RightLowerLeg"},{"RightLowerLeg","RightFoot"}
-                            }
-                        }
-
-                        for i = 1, #Players:GetPlayers() do
-                            local p = Players:GetPlayers()[i]
-
-                            if p ~= LocalPlayer and p.Character then
-                                local char = p.Character
-                                local hum = char:FindFirstChildOfClass("Humanoid")
-
-                                if hum and hum.Health > 0 then
-                                    local rig = hum.RigType == Enum.HumanoidRigType.R15 and "R15" or "R6"
-                                    local boneList = bones[rig]
-
-                                    local lines = skeletonCache[p]
-
-                                    if not lines then
-                                        lines = table.create(#boneList)
-                                        for i2 = 1, #boneList do
-                                            local l = Drawing.new("Line")
-                                            l.Thickness = 1.5
-                                            l.Transparency = 1
-                                            lines[i2] = l
-                                        end
-                                        skeletonCache[p] = lines
-                                    end
-
-                                    for i2 = 1, #boneList do
-                                        local b = boneList[i2]
-
-                                        local a = char:FindFirstChild(b[1])
-                                        local c = char:FindFirstChild(b[2])
-
-                                        local l = lines[i2]
-
-                                        if a and c then
-                                            local pa, va = Camera:WorldToViewportPoint(a.Position)
-                                            local pb, vb = Camera:WorldToViewportPoint(c.Position)
-
-                                            if va or vb then
-                                                l.From = Vector2.new(pa.X, pa.Y)
-                                                l.To = Vector2.new(pb.X, pb.Y)
-                                                l.Color = Color3.fromRGB(80, 255, 140)
-                                                l.Visible = true
-                                            else
-                                                l.Visible = false
-                                            end
-                                        else
-                                            l.Visible = false
-                                        end
-                                    end
-                                end
-                            end
-                        end
-                    end)
-                end
-
-                for _, lines in pairs(skeletonCache) do
-                    for _, l in ipairs(lines) do
-                        l:Remove()
-                    end
-                end
-
-                skeletonCache = {}
-            end)
-        else
-            for _, lines in pairs(skeletonCache) do
-                for _, l in ipairs(lines) do
-                    l:Remove()
-                end
-            end
-            skeletonCache = {}
-        end
-    end
-})
-
 local playerNameESP = false
 playerNameCache = {}
 playerNameConnections = {}
@@ -1162,23 +786,90 @@ EspPlayersBox:AddToggle("BeastGlowUp", {
             )
         end
     end
-})
+}) 
 
--- ================= ADVANCED =================
+local SettingBox = Tabs.Setting:AddLeftGroupbox("Sensitivity", "columns-3-cog")
+
+SettingBox:AddLabel("This is for Mobile.")
+
 local Players = game:GetService("Players")
-local TeleportService = game:GetService("TeleportService")
+local UserInputService = game:GetService("UserInputService")
+
 local player = Players.LocalPlayer
 
-local AdvancedBox = Tabs.Advanced:AddLeftGroupbox("Rejoining", "external-link")
+local CONFIG = {
+    MIN = 0.1,
+    MAX = 10,
+    DEFAULT = 1
+}
 
-AdvancedBox:AddButton({
-    Text = "Rejoin",
-    Func = function()
-        TeleportService:Teleport(game.PlaceId, player)
+local SensX = CONFIG.DEFAULT
+local SensY = CONFIG.DEFAULT
+
+pcall(function()
+    local playerScripts = player:WaitForChild("PlayerScripts")
+    local playerModule = playerScripts:WaitForChild("PlayerModule")
+    local cameraModule = playerModule:WaitForChild("CameraModule")
+    local cameraInput = cameraModule:WaitForChild("CameraInput")
+
+    local cameraInputModule = require(cameraInput)
+
+    if cameraInputModule and cameraInputModule.getRotation then
+        local oldGetRotation = cameraInputModule.getRotation
+
+        cameraInputModule.getRotation = function(disableRotation)
+            local rotation = oldGetRotation(disableRotation)
+
+            if UserInputService.TouchEnabled then
+                return Vector2.new(
+                    rotation.X * SensX,
+                    rotation.Y * SensY
+                )
+            end
+
+            return rotation
+        end
+    end
+end)
+
+SettingBox:AddSlider("SensitivityX", {
+    Text = "Sensitivity X",
+    Default = CONFIG.DEFAULT,
+    Min = CONFIG.MIN,
+    Max = CONFIG.MAX,
+    Rounding = 1,
+    Compact = false,
+
+    Callback = function(Value)
+        SensX = Value
     end
 })
 
-local AdvancedBox = Tabs.Advanced:AddLeftGroupbox("Walkspeed", "sport-shoe")
+SettingBox:AddSlider("SensitivityY", {
+    Text = "Sensitivity Y",
+    Default = CONFIG.DEFAULT,
+    Min = CONFIG.MIN,
+    Max = CONFIG.MAX,
+    Rounding = 1,
+    Compact = false,
+
+    Callback = function(Value)
+        SensY = Value
+    end
+})
+
+SettingBox:AddButton({
+    Text = "Reset Sensitivity",
+    Func = function()
+        SensX = CONFIG.DEFAULT
+        SensY = CONFIG.DEFAULT
+
+        Library.Options["SensitivityX"]:SetValue(CONFIG.DEFAULT)
+        Library.Options["SensitivityY"]:SetValue(CONFIG.DEFAULT)
+    end
+})
+
+local SettingBox = Tabs.Setting:AddLeftGroupbox("Walkspeed", "sport-shoe")
 
 local player = game.Players.LocalPlayer
 
@@ -1214,8 +905,8 @@ player.CharacterAdded:Connect(function()
     applySpeed()
 end)
 
-AdvancedBox:AddToggle("WalkspeedToggle", {
-    Text = "Enable WalkSpeed",
+SettingBox:AddToggle("WalkspeedToggle", {
+    Text = "Enable Walkspeed",
     Default = false,
 
     Callback = function(value)
@@ -1224,7 +915,7 @@ AdvancedBox:AddToggle("WalkspeedToggle", {
     end
 })
 
-AdvancedBox:AddSlider("WalkSpeedSlider", {
+SettingBox:AddSlider("WalkSpeedSlider", {
     Text = "Speed",
     Default = 16,
     Min = 16,
@@ -1245,7 +936,7 @@ AdvancedBox:AddSlider("WalkSpeedSlider", {
     end
 })
 
-local AdvancedBox = Tabs.Advanced:AddLeftGroupbox("High Jump", "waves-arrow-up")
+local SettingBox = Tabs.Setting:AddLeftGroupbox("High Jump", "waves-arrow-up")
 
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
@@ -1286,7 +977,7 @@ player.CharacterAdded:Connect(function()
     applyJump()
 end)
 
-AdvancedBox:AddToggle("HighJumpToggle", {
+SettingBox:AddToggle("HighJumpToggle", {
     Text = "Enable High Jump",
     Default = false,
 
@@ -1296,7 +987,7 @@ AdvancedBox:AddToggle("HighJumpToggle", {
     end
 })
 
-AdvancedBox:AddSlider("HighJumpSlider", {
+SettingBox:AddSlider("HighJumpSlider", {
     Text = "Jump Power",
     Default = 120,
     Min = 50,
@@ -1310,52 +1001,19 @@ AdvancedBox:AddSlider("HighJumpSlider", {
     end
 })
 
-local AdvancedBox = Tabs.Advanced:AddLeftGroupbox("Infinite Jump", "arrow-big-up-dash")
+local SettingBox = Tabs.Setting:AddRightGroupbox("Rejoining", "external-link")
 
-local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
+local player = game.Players.LocalPlayer
 
-local player = Players.LocalPlayer
-local enabled = false
-
-local connection
-
-local function setup()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
-
-    if connection then
-        connection:Disconnect()
-        connection = nil
-    end
-
-    connection = UserInputService.JumpRequest:Connect(function()
-        if not enabled then return end
-        if humanoid.Health <= 0 then return end
-
-        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end)
-end
-
-setup()
-
-player.CharacterAdded:Connect(function()
-    task.wait(0.5)
-    if enabled then
-        setup()
-    end
-end)
-
-AdvancedBox:AddToggle("InfiniteJumpToggle", {
-    Text = "Enable Infinite Jump",
-    Default = false,
-
-    Callback = function(value)
-        enabled = value
+SettingBox:AddButton({
+    Text = "Rejoin",
+    Func = function()
+        TeleportService:Teleport(game.PlaceId, player)
     end
 })
 
-local AdvancedBox = Tabs.Advanced:AddRightGroupbox("Tracking", "locate-fixed")
+local SettingBox = Tabs.Setting:AddRightGroupbox("Tracking", "locate-fixed")
 
 _G.AimbotActive = false
 _G.AimbotTarget = nil
@@ -1383,7 +1041,7 @@ local function disconnectAll()
     end
 end
 
-AdvancedBox:AddToggle("Aimbot", {
+SettingBox:AddToggle("Aimbot", {
     Text = "Aimbot",
     Default = false,
     Callback = function(state)
@@ -1542,7 +1200,7 @@ AdvancedBox:AddToggle("Aimbot", {
 
 _G.AimbotLocked = false
 
-AdvancedBox:AddToggle("AimbotLockToggle", {
+SettingBox:AddToggle("AimbotLockToggle", {
     Text = "Aimbot Lock Toggle",
     Default = false,
     Callback = function(state)
@@ -1558,7 +1216,7 @@ AdvancedBox:AddToggle("AimbotLockToggle", {
     end
 })
 
-local AdvancedBox = Tabs.Advanced:AddRightGroupbox("Extender", "wind")
+local SettingBox = Tabs.Setting:AddRightGroupbox("Extender", "wind")
 
 _G.HitboxSize = Vector3.new(5.5, 6, 5.5)
 _G.originalHitboxSizes = {}
@@ -1594,9 +1252,9 @@ local function applyHitboxToAll()
 	end
 end
 
-AdvancedBox:AddInput("Hitbox Size", {
+SettingBox:AddInput("Hitbox Size", {
 	Text = "Hitbox Size",
-	Placeholder = "Ex: 6, 6, 8 (max 10)",
+	Placeholder = "Ex: 5, 7, 6 (max 10)",
 	Callback = function(text)
 		text = string.gsub(text, "%s+", "")
 		local x, y, z = string.match(text, "([%d%.]+),([%d%.]+),([%d%.]+)")
@@ -1619,7 +1277,7 @@ AdvancedBox:AddInput("Hitbox Size", {
 	end
 })
 
-AdvancedBox:AddToggle("Hitbox Expander", {
+SettingBox:AddToggle("Hitbox Expander", {
 	Text = "Hitbox Expander",
 	Default = false,
 	Callback = function(state)
@@ -1725,244 +1383,124 @@ AdvancedBox:AddToggle("Hitbox Expander", {
 	end
 })
 
--- ================= VISUAL (FOV CAMERA) =================
-local VisualBox = Tabs.Visual:AddLeftGroupbox("Fov Camera", "fullscreen")
+local p,rs = game.Players.LocalPlayer, game:GetService("RunService")
 
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
+local on,name,level,icon = false,"MaybeKayque",100,""
+local icons = {
+    VIP="rbxassetid://1188562340", QA="rbxassetid://18940008283",
+    CON="rbxassetid://18940005647", Casey="rbxassetid://131476591459702",
+    DEV="rbxassetid://18940006678", MrWindy="rbxassetid://18937953345",
+    MOD="rbxassetid://105155010224102"
+}
 
-local player = Players.LocalPlayer
-local camera = workspace.CurrentCamera
+local n,l,i,orig = nil,nil,nil,{}
 
-local enabled = false
+local function setup()
+    local f = p.PlayerGui:WaitForChild("ScreenGui").PlayerNamesFrame:WaitForChild(p.Name.."PlayerFrame")
+    n,l = f.NameLabel,f.LevelLabel
+    for _,v in ipairs(f:GetDescendants()) do
+        if v:IsA("ImageLabel") or v:IsA("ImageButton") then i=v break end
+    end
+    orig.n,orig.l,orig.i = n.Text,l.Text,i and i.Image
+end
 
-local defaultFOV = 70
-local fovValue = 70
-
-local function applyFOV()
-    if enabled then
-        camera.FieldOfView = fovValue
-    else
-        camera.FieldOfView = defaultFOV
+local function update()
+    for _,v in ipairs(p.PlayerGui:GetDescendants()) do
+        if (v:IsA("TextLabel") or v:IsA("TextButton")) and v.Text~="" then
+            orig[v]=orig[v] or v.Text
+            if on and v.Text:find(p.Name) then
+                local base = orig[v]:gsub(p.Name,""):gsub("%s+"," "):gsub("^%s+",""):gsub("%s+$","")
+                v.Text = base=="" and name or (name.." "..base)
+            elseif not on then
+                v.Text = orig[v]
+            end
+        end
     end
 end
 
-RunService.RenderStepped:Connect(function()
-    if enabled then
-        camera.FieldOfView = fovValue
+local function apply()
+    if not n then return end
+    if on then
+        n.Text, l.Text = name, tostring(level)
+        if i and icon~="" then i.Image = icon end
+    else
+        n.Text, l.Text = orig.n, orig.l
+        if i and orig.i then i.Image = orig.i end
     end
+    update()
+end
+
+rs.RenderStepped:Connect(function()
+    if on and n then
+        n.Text, l.Text = name, tostring(level)
+        if i and icon~="" then i.Image = icon end
+        update()
+    end
+end)
+
+p.CharacterAdded:Connect(function(c)
+    task.wait(.5)
+    local h=c:FindFirstChildOfClass("Humanoid")
+    if h then h.DisplayName = on and name or p.DisplayName end
+end)
+
+task.spawn(function() setup() apply() end)
+
+-- UI
+local box = Tabs.Visual:AddLeftTabbox()
+local tab = box:AddTab("Nick")
+
+tab:AddToggle("Spoof", {
+    Text="Hide username", Default=false,
+    Callback=function(v) on=v apply() end
+})
+
+tab:AddInput("Name", {
+    Text="Username", Default="MaybeKayque", Finished=true,
+    Callback=function(v) name=v if on then apply() end end
+})
+
+tab:AddInput("Level", {
+    Text="Level", Default="100", Finished=true,
+    Callback=function(v) level=tonumber(v) or 100 if on then apply() end end
+})
+
+tab:AddDropdown("Icon", {
+    Text="Icon",
+    Values={"None","VIP","QA","CON","Casey","DEV","MrWindy","MOD"},
+    Default="None",
+    Callback=function(v) icon = (v=="None" and "" or icons[v]) if on then apply() end end
+})
+
+local VisualBox = Tabs.Visual:AddRightGroupbox("Fov Camera", "fullscreen")
+
+local camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+
+local FOVEnabled, fovValue, defaultFOV = false, 70, 70
+
+RunService.RenderStepped:Connect(function()
+	camera.FieldOfView = FOVEnabled and fovValue or defaultFOV
 end)
 
 VisualBox:AddToggle("FOVToggle", {
-    Text = "Enable Wide FOV",
-    Default = false,
-
-    Callback = function(value)
-        enabled = value
-        applyFOV()
-    end
+	Text = "Enable Wide FOV",
+	Default = false,
+	Callback = function(v)
+		FOVEnabled = v
+	end
 })
 
 VisualBox:AddSlider("FOVSlider", {
-    Text = "FOV",
-    Default = 70,
-    Min = 70,
-    Max = 120,
-
-    Callback = function(value)
-        fovValue = value
-
-        if enabled then
-            camera.FieldOfView = fovValue
-        end
-    end
-})
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
-local player = Players.LocalPlayer
-
-local enabled = false
-local spoofName = "MaybeKayque"
-local spoofLevel = 100
-local spoofIconId = ""
-
-local BadgeIcons = {
-	VIP = "rbxassetid://1188562340",
-	QA = "rbxassetid://18940008283",
-	DEV = "rbxassetid://18940005647",
-	HQ = "rbxassetid://131476591459702",
-	DEV2 = "rbxassetid://18940006678",
-	MrWindy = "rbxassetid://18937953345",
-	MOD = "rbxassetid://105155010224102"
-}
-
-local nameLabel, levelLabel, iconImage
-local originalName, originalLevel, originalIcon
-
-local function setupPlayerFrame()
-	local pg = player:WaitForChild("PlayerGui")
-	local screenGui = pg:WaitForChild("ScreenGui")
-	local namesFrame = screenGui:WaitForChild("PlayerNamesFrame")
-	local frame = namesFrame:WaitForChild(player.Name .. "PlayerFrame")
-
-	nameLabel = frame:WaitForChild("NameLabel")
-	levelLabel = frame:WaitForChild("LevelLabel")
-
-	for _, v in ipairs(frame:GetDescendants()) do
-		if v:IsA("ImageLabel") or v:IsA("ImageButton") then
-			iconImage = v
-			break
-		end
-	end
-
-	originalName = nameLabel.Text
-	originalLevel = levelLabel.Text
-	if iconImage then
-		originalIcon = iconImage.Image
-	end
-end
-
-local originalTexts = {}
-
-local function cache(obj)
-	if not originalTexts[obj] then
-		originalTexts[obj] = obj.Text
-	end
-end
-
-local function restoreAll()
-	for obj, txt in pairs(originalTexts) do
-		if obj and obj.Parent then
-			obj.Text = txt
-		end
-	end
-end
-
-local function updateTexts()
-	local pg = player:FindFirstChild("PlayerGui")
-	if not pg then return end
-
-	for _, v in ipairs(pg:GetDescendants()) do
-		if v:IsA("TextLabel") or v:IsA("TextButton") then
-			local txt = v.Text
-			if not txt or txt == "" then continue end
-
-			if txt:find(player.Name) then
-				cache(v)
-
-				if enabled then
-					local base = originalTexts[v] or txt
-
-					base = base:gsub(player.Name, "")
-					base = base:gsub("%s+", " ")
-					base = base:gsub("^%s+", ""):gsub("%s+$", "")
-
-					v.Text = (base == "" and spoofName) or (spoofName .. " " .. base)
-				end
-			end
-		end
-	end
-end
-
-local function applySpoof()
-	if not nameLabel then return end
-
-	if enabled then
-		nameLabel.Text = spoofName
-		levelLabel.Text = tostring(spoofLevel)
-
-		if iconImage and spoofIconId ~= "" then
-			iconImage.Image = spoofIconId
-		end
-	else
-		nameLabel.Text = originalName
-		levelLabel.Text = originalLevel
-
-		if iconImage and originalIcon then
-			iconImage.Image = originalIcon
-		end
-
-		restoreAll()
-	end
-
-	updateTexts()
-end
-
-RunService.RenderStepped:Connect(function()
-	if not enabled then return end
-
-	if nameLabel then
-		nameLabel.Text = spoofName
-		levelLabel.Text = tostring(spoofLevel)
-	end
-
-	if iconImage and spoofIconId ~= "" then
-		iconImage.Image = spoofIconId
-	end
-
-	updateTexts()
-end)
-
-player.CharacterAdded:Connect(function(char)
-	task.wait(0.5)
-	local hum = char:FindFirstChildOfClass("Humanoid")
-	if hum then
-		hum.DisplayName = enabled and spoofName or player.DisplayName
-	end
-end)
-
-task.spawn(function()
-	setupPlayerFrame()
-	applySpoof()
-end)
-
-local VisualTabBox = Tabs.Visual:AddRightTabbox()
-
-local NickTab = VisualTabBox:AddTab("Nick")
-local AvatarTab = VisualTabBox:AddTab("Avatar")
-
-NickTab:AddToggle("EnableSpoof", {
-	Text = "Hide your username.",
-	Default = false,
+	Text = "FOV",
+	Default = 70,
+	Min = 70,
+	Max = 120,
 	Callback = function(v)
-		enabled = v
-		applySpoof()
+		fovValue = v
 	end
 })
 
-NickTab:AddInput("SpoofName", {
-	Text = "Username",
-	Default = "MaybeKayque",
-	Finished = true,
-	Callback = function(v)
-		spoofName = v
-		if enabled then applySpoof() end
-	end
-})
-
-NickTab:AddInput("SpoofLevel", {
-	Text = "Level",
-	Default = "100",
-	Finished = true,
-	Callback = function(v)
-		spoofLevel = tonumber(v) or 100
-		if enabled then applySpoof() end
-	end
-})
-
-NickTab:AddDropdown("SpoofIcon", {
-	Text = "Icon",
-	Values = {"None","VIP","QA","DEV","HQ","DEV2","MrWindy","MOD"},
-	Default = "None",
-	Callback = function(v)
-		spoofIconId = (v == "None") and "" or BadgeIcons[v]
-		if enabled then applySpoof() end
-	end
-})
-
--- ================= PROGRESS =================
 local ProgressBox = Tabs.Progress:AddLeftGroupbox("Objects", "monitor")
 
 local enabled = false
@@ -2098,96 +1636,127 @@ end
 
 end)
 
-local enabled=false
-local P=game:GetService("Players")
-local Run=game:GetService("RunService")
-local W=workspace
-local comps={}
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local WS = game:GetService("Workspace")
 
-ProgressBox:AddToggle("ComputerProgressV2",{
-	Text="Computer Progress V2",
-	Default=false,
-	Callback=function(v)
-		enabled=v
-		if not v then
-			for _,d in pairs(comps)do if d.g then d.g:Destroy()end end
-			comps={}
-		end
-	end
+local doors, conns = {}, {}
+local running = false
+
+ProgressBox:AddToggle("Door", {
+    Text = "Door Timer",
+    Default = false,
+
+    Callback = function(v)
+        running = v
+
+        if not v then
+            for _,c in pairs(conns) do pcall(function() c:Disconnect() end) end
+            for _,g in pairs(doors) do if g then g:Destroy() end end
+            table.clear(conns)
+            table.clear(doors)
+            return
+        end
+
+        local function getProgress(plr)
+            local stats = plr:FindFirstChild("TempPlayerStatsModule")
+            local ap = stats and stats:FindFirstChild("ActionProgress")
+            return ap and ap.Value or 0
+        end
+
+        local function setup(d)
+            if doors[d] or d.Name ~= "SingleDoor" then return end
+
+            local p = d:FindFirstChildWhichIsA("BasePart", true)
+            if not p then return end
+
+            local g = Instance.new("BillboardGui")
+            g.Size = UDim2.fromOffset(90,22)
+            g.AlwaysOnTop = true
+            g.Adornee = p
+
+            g.StudsOffsetWorldSpace = Vector3.new(0, 0, 0.1)
+
+            g.Parent = p
+
+            local t = Instance.new("TextLabel", g)
+            t.Size = UDim2.new(1,0,0.45,0)
+            t.BackgroundTransparency = 1
+            t.TextScaled = true
+            t.Font = Enum.Font.GothamMedium
+            t.TextColor3 = Color3.fromRGB(255,210,140)
+            t.TextStrokeTransparency = 0.6
+            t.Text = "0.0%"
+
+            local bg = Instance.new("Frame", g)
+            bg.Size = UDim2.new(1,0,0.35,0)
+            bg.Position = UDim2.new(0,0,0.6,0)
+            bg.BackgroundColor3 = Color3.fromRGB(25,15,5)
+            bg.BackgroundTransparency = 0.5
+            bg.BorderSizePixel = 0
+
+            local bar = Instance.new("Frame", bg)
+            bar.Size = UDim2.new(0,0,1,0)
+            bar.BackgroundColor3 = Color3.fromRGB(170,100,40)
+            bar.BorderSizePixel = 0
+
+            local progress = 0
+
+            local conn
+            conn = RunService.Heartbeat:Connect(function()
+                if not running or not d.Parent then
+                    if conn then conn:Disconnect() end
+                    if g then g:Destroy() end
+                    doors[d] = nil
+                    return
+                end
+
+                local best = 0
+
+                for _,plr in ipairs(Players:GetPlayers()) do
+                    local char = plr.Character
+                    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+
+                    if hrp and (hrp.Position - p.Position).Magnitude <= 12 then
+                        local prog = getProgress(plr)
+                        if prog > best then
+                            best = prog
+                        end
+                    end
+                end
+
+                if best <= 0 then
+                    progress = 0
+                else
+                    progress = best
+                    if progress >= 0.999 then
+                        progress = 1
+                    end
+                end
+
+                progress = math.clamp(progress,0,1)
+
+                bar:TweenSize(UDim2.new(progress,0,1,0), "Out", "Quad", 0.1, true)
+
+                t.Text = string.format("%.1f%%", progress*100)
+            end)
+
+            table.insert(conns, conn)
+            doors[d] = g
+        end
+
+        table.insert(conns, task.spawn(function()
+            while running do
+                for _,v in ipairs(WS:GetDescendants()) do
+                    if v.Name == "SingleDoor" and not doors[v] then
+                        setup(v)
+                    end
+                end
+                task.wait(1.5)
+            end
+        end))
+    end
 })
-
-local function make(pc)
-	if comps[pc] then return end
-
-	local g=Instance.new("BillboardGui",pc)
-	g.Size=UDim2.new(0,140,0,24)
-	g.StudsOffset=Vector3.new(0,3.6,0)
-	g.AlwaysOnTop=true
-
-	local t=Instance.new("TextLabel",g)
-	t.Size=UDim2.new(1,0,0.4,0)
-	t.BackgroundTransparency=1
-	t.TextScaled=true
-	t.Font=Enum.Font.GothamBold
-	t.TextStrokeTransparency=0.25
-	t.TextColor3=Color3.new(1,1,1)
-
-	local bg=Instance.new("Frame",g)
-	bg.Position=UDim2.new(0,0,0.5,0)
-	bg.Size=UDim2.new(1,0,0.4,0)
-	bg.BackgroundTransparency=1
-
-	local b=Instance.new("Frame",bg)
-	b.Size=UDim2.new(0,0,1,0)
-	b.BackgroundColor3=Color3.new(1,1,1)
-
-	comps[pc]={g=g,b=b,t=t,p=0}
-end
-
-local function prog(pc)
-	local m=0
-	for _,p in pairs(pc:GetDescendants())do
-		if p:IsA("BasePart") and p.Name:find("ComputerTrigger")then
-			for _,t in pairs(p:GetTouchingParts())do
-				local pl=P:GetPlayerFromCharacter(t.Parent)
-				local ap=pl and pl:FindFirstChild("TempPlayerStatsModule") and pl.TempPlayerStatsModule:FindFirstChild("ActionProgress")
-				if ap then m=math.max(m,ap.Value)end
-			end
-		end
-	end
-	return m
-end
-
-task.spawn(function()
-	while true do
-		if enabled then
-			for _,o in pairs(W:GetDescendants())do
-				if o.Name=="ComputerTable" then make(o) end
-			end
-		end
-		task.wait(2)
-	end
-end)
-
-Run.Heartbeat:Connect(function()
-	if not enabled then return end
-	for pc,d in pairs(comps)do
-		if pc.Parent then
-			d.p=math.max(d.p,prog(pc))
-			d.b.Size=UDim2.new(d.p,0,1,0)
-
-			if d.p>=1 then
-				d.t.Text="COMPLETED"
-				d.t.TextColor3=Color3.fromRGB(100,255,100)
-				d.b.BackgroundColor3=Color3.fromRGB(100,255,100)
-			else
-				d.t.Text=string.format("%.1f%%",d.p*100)
-				d.t.TextColor3=Color3.new(1,1,1)
-				d.b.BackgroundColor3=Color3.new(1,1,1)
-			end
-		end
-	end
-end)
 
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
@@ -2304,160 +1873,7 @@ ProgressBox:AddToggle("ExitDoor", {
 })
 
 ProgressBox:AddToggle("DetectorWalkspeed", {
-Text = "Detector Walkspeed",
-Default = false,
-
-Callback = function(enabled)  
-    local Players = game:GetService("Players")  
-    local RunService = game:GetService("RunService")  
-    local UserInputService = game:GetService("UserInputService")  
-
-    local player = Players.LocalPlayer  
-
-    local old = player:WaitForChild("PlayerGui"):FindFirstChild("WalkSpeedMonitor")  
-    if old then  
-        old:Destroy()  
-    end  
-
-    if not enabled then  
-        return  
-    end  
-
-    local screenGui = Instance.new("ScreenGui")  
-    screenGui.Name = "WalkSpeedMonitor"  
-    screenGui.ResetOnSpawn = false  
-    screenGui.Parent = player:WaitForChild("PlayerGui")  
-
-    local mainFrame = Instance.new("Frame")  
-    mainFrame.Size = UDim2.new(0, 200, 0, 300)  
-    mainFrame.Position = UDim2.new(0, 50, 0, 50)  
-    mainFrame.BackgroundTransparency = 1  
-    mainFrame.Parent = screenGui  
-
-    local dragHandle = Instance.new("TextLabel")  
-    dragHandle.Size = UDim2.new(1, 0, 0, 20)  
-    dragHandle.BackgroundTransparency = 0.3  
-    dragHandle.BackgroundColor3 = Color3.fromRGB(0,0,0)  
-    dragHandle.Text = "Detector WalkSpeed"  
-    dragHandle.TextColor3 = Color3.new(1,1,1)  
-    dragHandle.TextSize = 14  
-    dragHandle.Font = Enum.Font.SourceSansBold  
-    dragHandle.TextStrokeTransparency = 0.5  
-    dragHandle.Parent = mainFrame  
-
-    local container = Instance.new("Frame")  
-    container.Size = UDim2.new(1, 0, 1, -25)  
-    container.Position = UDim2.new(0, 0, 0, 25)  
-    container.BackgroundTransparency = 1  
-    container.Parent = mainFrame  
-
-    local layout = Instance.new("UIListLayout")  
-    layout.Parent = container  
-
-    local labels = {}  
-
-    local dragging, dragInput, dragStart, startPos  
-
-    dragHandle.InputBegan:Connect(function(input)  
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then  
-            dragging = true  
-            dragStart = input.Position  
-            startPos = mainFrame.Position  
-
-            input.Changed:Connect(function()  
-                if input.UserInputState == Enum.UserInputState.End then  
-                    dragging = false  
-                end  
-            end)  
-        end  
-    end)  
-
-    dragHandle.InputChanged:Connect(function(input)  
-        if input.UserInputType == Enum.UserInputType.MouseMovement then  
-            dragInput = input  
-        end  
-    end)  
-
-    UserInputService.InputChanged:Connect(function(input)  
-        if input == dragInput and dragging then  
-            local delta = input.Position - dragStart  
-            mainFrame.Position = UDim2.new(  
-                startPos.X.Scale,  
-                startPos.X.Offset + delta.X,  
-                startPos.Y.Scale,  
-                startPos.Y.Offset + delta.Y  
-            )  
-        end  
-    end)  
-
-    local function getSpeed(character, humanoid)  
-        local root = character:FindFirstChild("HumanoidRootPart")  
-        if root and humanoid then  
-            if humanoid.MoveDirection.Magnitude == 0 then  
-                return 0  
-            end  
-
-            local vel = root.AssemblyLinearVelocity  
-            return Vector3.new(vel.X, 0, vel.Z).Magnitude  
-        end  
-        return 0  
-    end  
-
-    local alive = true  
-
-    local connection
-    connection = RunService.RenderStepped:Connect(function()  
-        if not alive then return end  
-
-        for _, player in ipairs(Players:GetPlayers()) do  
-            local char = player.Character  
-            local humanoid = char and char:FindFirstChildOfClass("Humanoid")  
-
-            if humanoid and char then  
-                local speed = getSpeed(char, humanoid)  
-                local label = labels[player.UserId]  
-
-                if not label then  
-                    label = Instance.new("TextLabel")  
-                    label.Size = UDim2.new(1, 0, 0, 22)  
-                    label.BackgroundTransparency = 1  
-                    label.TextSize = 14  
-                    label.Font = Enum.Font.Code  
-                    label.TextXAlignment = Enum.TextXAlignment.Left  
-                    label.Parent = container  
-                    labels[player.UserId] = label  
-                end  
-
-                if speed <= 16.5 then  
-                    label.TextColor3 = Color3.fromRGB(0, 255, 0)  
-                elseif speed >= 18 then  
-                    label.TextColor3 = Color3.fromRGB(255, 0, 0)  
-                else  
-                    label.TextColor3 = Color3.new(1, 1, 1)  
-                end  
-
-                label.Text = string.format("%s: %.1f", player.Name, speed)  
-            end  
-        end  
-    end)  
-
-    task.spawn(function()  
-        repeat task.wait(0.1) until not enabled  
-
-        alive = false  
-        if connection then connection:Disconnect() end  
-
-        local gui = player.PlayerGui:FindFirstChild("WalkSpeedMonitor")  
-        if gui then  
-            gui:Destroy()  
-        end  
-    end)  
-end
-
-})
-
-ProgressBox:AddToggle("DetectorWalkspeed", {
-    Text = "Detector Walkspeed V2",
+    Text = "Walkspeed",
     Default = false,
 
     Callback = function(Value)
@@ -2647,7 +2063,7 @@ ProgressBox:AddToggle("BeastPower", {
                         if value >= 100 then
                             if not readyShown then
                                 label.TextColor3 = Color3.fromRGB(0,255,0)
-                                label.Text = "Runner Ready"
+                                label.Text = "Full"
                                 readyShown = true
                             end
 
@@ -2824,7 +2240,6 @@ ProgressBox:AddToggle("BeastPower", {
             )
         end
 
-        -- novos players
         table.insert(_G.BeastPower2_Connections,
             Players.PlayerAdded:Connect(function(player)
                 player.CharacterAdded:Connect(function(char)
@@ -2836,172 +2251,207 @@ ProgressBox:AddToggle("BeastPower", {
     end
 })
 
+ProgressBox:AddDivider()
+
+ProgressBox:AddToggle("LifeTime", {
+    Text = "Life Time",
+    Default = false,
+
+    Callback = function(v)
+        local P, R, LP = game:GetService("Players"), game:GetService("RunService"), game:GetService("Players").LocalPlayer
+        _G.Life = v
+
+        if not v then
+            for _,p in pairs(P:GetPlayers()) do
+                local c=p.Character
+                local part=c and (c:FindFirstChild("Head") or c:FindFirstChild("HumanoidRootPart"))
+                local g=part and part:FindFirstChild("LifeTag")
+                if g then g:Destroy() end
+            end
+            if _G.LifeC then for _,c in pairs(_G.LifeC) do pcall(function() c:Disconnect() end) end end
+            _G.LifeC={}
+            return
+        end
+
+        _G.LifeC={}
+
+        local function beast(p)
+            local s=p:FindFirstChild("TempPlayerStatsModule",true)
+            return s and s:FindFirstChild("IsBeast") and s.IsBeast.Value
+        end
+
+        local function col(v)
+            return v>=400 and Color3.fromRGB(80,160,255) or v>=200 and Color3.fromRGB(255,210,80) or Color3.fromRGB(255,80,80)
+        end
+
+        local function tag(c)
+            if not _G.Life then return end
+            local p=P:GetPlayerFromCharacter(c)
+            if not p or p==LP then return end
+
+            local part=c:FindFirstChild("Head") or c:FindFirstChild("HumanoidRootPart")
+            local s=p:FindFirstChild("TempPlayerStatsModule",true)
+            local hp=s and s:FindFirstChild("Health")
+
+            if part and hp and not part:FindFirstChild("LifeTag") then
+                local b=Instance.new("BillboardGui",part)
+                b.Name="LifeTag" b.Size=UDim2.new(0,60,0,20) b.StudsOffset=Vector3.new(0,3,0) b.AlwaysOnTop=true
+
+                local t=Instance.new("TextLabel",b)
+                t.Size=UDim2.new(1,0,1,0) t.BackgroundTransparency=1 t.TextScaled=true t.Font=Enum.Font.Arcade t.TextStrokeTransparency=0.4
+
+                local sVal=500
+                local conn
+                conn=R.RenderStepped:Connect(function(dt)
+                    if not _G.Life or not c.Parent then conn:Disconnect() b:Destroy() return end
+
+                    if beast(p) then
+                        t.Text="000s" t.TextColor3=Color3.fromRGB(255,0,0) sVal=500 return
+                    end
+
+                    if hp.Value>0 then
+                        local target=math.floor(math.clamp(hp.Value,0,100)/100*500)
+                        sVal+= (target-sVal)*math.clamp(dt*1.2,0,1)
+                        local v=math.floor(sVal+0.5)
+                        t.Text=v.."s" t.TextColor3=col(v)
+                    else
+                        t.Text="" sVal=500
+                    end
+                end)
+
+                table.insert(_G.LifeC,conn)
+            end
+        end
+
+        local function hook(p)
+            table.insert(_G.LifeC,p.CharacterAdded:Connect(function(c) task.wait(0.3) tag(c) end))
+            if p.Character then tag(p.Character) end
+        end
+
+        for _,p in pairs(P:GetPlayers()) do hook(p) end
+        table.insert(_G.LifeC,P.PlayerAdded:Connect(hook))
+
+        task.spawn(function()
+            while _G.Life do
+                task.wait(2)
+                for _,p in pairs(P:GetPlayers()) do
+                    local c=p.Character
+                    local part=c and (c:FindFirstChild("Head") or c:FindFirstChild("HumanoidRootPart"))
+                    if p~=LP and part and not part:FindFirstChild("LifeTag") then tag(c) end
+                end
+            end
+        end)
+    end
+})
+
 ProgressBox:AddToggle("SpawnTime", {
     Text = "Spawn time",
     Default = false,
 
-    Callback = function(Value)
+    Callback = function(v)
 
-        if _G.BeastTimerConnection then
-            _G.BeastTimerConnection:Disconnect()
-            _G.BeastTimerConnection = nil
-        end
+        if _G.BTC then _G.BTC:Disconnect() end
+        if _G.BCC then _G.BCC:Disconnect() end
 
-        if _G.BeastCharConnection then
-            _G.BeastCharConnection:Disconnect()
-            _G.BeastCharConnection = nil
-        end
+        local cg = game:GetService("CoreGui")
+        local lp = game.Players.LocalPlayer
 
-        local CoreGui = game:GetService("CoreGui")
-        if CoreGui:FindFirstChild("BeastTimerGui") then
-            CoreGui.BeastTimerGui:Destroy()
-        end
+        local old = cg:FindFirstChild("BeastTimerGui")
+        if old then old:Destroy() end
+        if not v then return end
 
-        if not Value then return end
+        local rs, ts, ds = game:GetService("RunService"), game:GetService("TweenService"), game:GetService("Debris")
 
-        local Players = game:GetService("Players")
-        local RunService = game:GetService("RunService")
-        local TweenService = game:GetService("TweenService")
-        local Debris = game:GetService("Debris")
+        local gui = Instance.new("ScreenGui", cg)
+        gui.Name, gui.DisplayOrder = "BeastTimerGui", 999
 
-        local LP = Players.LocalPlayer
+        local l = Instance.new("TextLabel", gui)
+        l.AnchorPoint = Vector2.new(.5,.5)
+        l.Position = UDim2.new(.5,0,.5,0)
+        l.Size = UDim2.new(0,350,0,80)
+        l.BackgroundTransparency = 1
+        l.TextSize = 36
+        l.Font = Enum.Font.SpecialElite
+        l.TextStrokeTransparency = .2
+        l.TextStrokeColor3 = Color3.fromRGB(120,0,0)
+        l.Visible = false
 
-        local BEAST_RELEASE_TIME = 16 
-        local TELEPORT_DISTANCE = 20
+        local function drip(t,c)
+            for i=1,math.random(2,4) do
+                local d = l:Clone()
+                d.Parent = gui
+                d.Text, d.TextColor3 = t, c
+                d.Position = l.Position + UDim2.new(0,math.random(-6,6),0,0)
 
-        local sg = Instance.new("ScreenGui")
-        sg.Name = "BeastTimerGui"
-        sg.DisplayOrder = 999
-        sg.Parent = CoreGui
-
-        local label = Instance.new("TextLabel")
-        label.AnchorPoint = Vector2.new(0.5, 0.5)
-        label.Position = UDim2.new(0.5, 0, 0.5, 0)
-        label.Size = UDim2.new(0, 350, 0, 80)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(255,255,255)
-        label.TextSize = 36
-        label.Font = Enum.Font.SpecialElite
-        label.TextStrokeTransparency = 0.2
-        label.TextStrokeColor3 = Color3.fromRGB(120,0,0)
-        label.Visible = false
-        label.Parent = sg
-
-        local function CreateDrip(text, color)
-            for i = 1, math.random(2,4) do
-                local drip = label:Clone()
-                drip.Parent = sg
-                drip.Text = text
-                drip.TextColor3 = color
-                drip.TextStrokeColor3 = Color3.fromRGB(80,0,0)
-                drip.Position = label.Position + UDim2.new(0, math.random(-6,6), 0, 0)
-                drip.ZIndex = label.ZIndex - 1
-                drip.TextTransparency = 0.1
-
-                TweenService:Create(drip, TweenInfo.new(0.8), {
-                    Position = drip.Position + UDim2.new(0,0,0,math.random(35,60)),
+                ts:Create(d,TweenInfo.new(.8),{
+                    Position = d.Position + UDim2.new(0,0,0,math.random(35,60)),
                     TextTransparency = 1
                 }):Play()
 
-                Debris:AddItem(drip, 1)
+                ds:AddItem(d,1)
             end
         end
 
-        local lastPosition = nil
-        local isCounting = false
-        local timeLeft = 0
-        local roundActive = false
+        local last, active, tleft = nil,false,0
+        local TELEPORT = 20
+        local DURATION = 16
 
-        local function IsBeast()
-            local statsModule = LP:FindFirstChild("TempPlayerStatsModule")
-            if statsModule then
-                local stats = require(statsModule)
-                return stats.IsBeast
-            end
-            return false
+        local function isBeast()
+            local m = lp:FindFirstChild("TempPlayerStatsModule")
+            return m and require(m).IsBeast
         end
 
-        _G.BeastTimerConnection = RunService.Heartbeat:Connect(function(dt)
-            local char = LP.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
+        _G.BTC = rs.Heartbeat:Connect(function(dt)
+            local c = lp.Character
+            local h = c and c:FindFirstChild("HumanoidRootPart")
+            if not h then return end
 
-            if IsBeast() then
-                label.Visible = false
-                isCounting = false
-                return
+            if isBeast() then l.Visible, active = false, false return end
+
+            if last and not active and (h.Position-last).Magnitude > TELEPORT then
+                active, tleft = true, DURATION
+                l.Visible = true
             end
 
-            local currentPos = hrp.Position
+            last = h.Position
 
-            if lastPosition and not roundActive then
-                local movedDistance = (currentPos - lastPosition).Magnitude
+            if active then
+                tleft -= dt
 
-                if movedDistance > TELEPORT_DISTANCE then
-                    roundActive = true
-                    isCounting = true
-                    timeLeft = BEAST_RELEASE_TIME
-                    label.Visible = true
-                end
-            end
+                if tleft <= 0 then
+                    active = false
+                    l.Text = "A Fera foi solta..."
+                    l.TextSize = 28
+                    l.TextColor3 = Color3.new(1,1,1)
+                    l.TextTransparency = 1
+                    l.Visible = true
 
-            lastPosition = currentPos
-
-            if isCounting then
-                timeLeft -= dt
-
-                if timeLeft <= 0 then
-                    timeLeft = 0
-                    isCounting = false
-                    roundActive = false 
-
-                    label.Text = "A Fera foi solta..."
-                    label.TextSize = 28
-                    label.TextColor3 = Color3.fromRGB(255,255,255)
-                    label.TextTransparency = 1
-                    label.Visible = true
-
-                    TweenService:Create(label, TweenInfo.new(1), {
-                        TextTransparency = 0
-                    }):Play()
+                    ts:Create(l,TweenInfo.new(1),{TextTransparency=0}):Play()
 
                     task.spawn(function()
-                        local start = tick()
-                        while tick() - start < 3 do
-                            CreateDrip(label.Text, Color3.fromRGB(180,0,0))
-                            task.wait(0.1)
+                        for i=1,30 do
+                            drip(l.Text,Color3.fromRGB(180,0,0))
+                            task.wait(.1)
                         end
                     end)
 
-                    task.delay(3.5, function()
-                        if not isCounting then
-                            label.Visible = false
-                        end
-                    end)
+                    task.delay(3.5,function() if not active then l.Visible=false end end)
 
                 else
-                    if math.floor(timeLeft) <= 5 then
-                        label.TextColor3 = Color3.fromRGB(255,40,40)
-                        label.TextStrokeColor3 = Color3.fromRGB(160,0,0)
+                    local c = tleft<=5 and Color3.fromRGB(255,40,40) or Color3.new(1,1,1)
+                    l.TextColor3, l.TextStrokeColor3 = c, Color3.fromRGB(120,0,0)
+                    l.Text = string.format("%.2f", tleft)
 
-                        if math.random() < 0.6 then
-                            CreateDrip(string.format("%.2f", timeLeft), label.TextColor3)
-                        end
-                    else
-                        label.TextColor3 = Color3.fromRGB(255,255,255)
-                        label.TextStrokeColor3 = Color3.fromRGB(120,0,0)
+                    if tleft<=5 and math.random()<.6 then
+                        drip(l.Text,c)
                     end
-
-                    label.Text = string.format("%.2f", timeLeft)
                 end
             end
         end)
 
-        _G.BeastCharConnection = LP.CharacterAdded:Connect(function()
-            roundActive = false
-            isCounting = false
-            lastPosition = nil
-            label.Visible = false
+        _G.BCC = lp.CharacterAdded:Connect(function()
+            active,last = false,nil
+            l.Visible = false
         end)
 
     end
@@ -3173,7 +2623,6 @@ ProgressBox:AddToggle("GetUp", {
     end
 })
 
--- ================= TEXTURES =================
 local TexturesBox = Tabs.Textures:AddLeftGroupbox("Double Jump Effects", "bubbles")
 
 local currentTexture = nil
@@ -3275,7 +2724,6 @@ TexturesBox:AddToggle("FpsBoost", {
         local Terrain = workspace:FindFirstChildOfClass("Terrain")
 
         if Value then
-            saved.GlobalShadows = Lighting.GlobalShadows
             saved.Quality = settings().Rendering.QualityLevel
 
             if Terrain then
@@ -3336,10 +2784,9 @@ TexturesBox:AddToggle("FpsBoost", {
                 Terrain.WaterTransparency = 1
             end
 
-            Lighting.GlobalShadows = false
             settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
 
-            print("ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ FPS Boost ON")
+            print("FPS Boost ON")
 
         else
 
@@ -3369,14 +2816,13 @@ TexturesBox:AddToggle("FpsBoost", {
                 Terrain.WaterTransparency = saved.Water.Transparency
             end
 
-            Lighting.GlobalShadows = saved.GlobalShadows or true
             settings().Rendering.QualityLevel = saved.Quality or Enum.QualityLevel.Automatic
 
             if saved.ExplosionConnection then
                 saved.ExplosionConnection:Disconnect()
             end
 
-            print("ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ FPS Boost OFF (restaurado)")
+            print("FPS Boost OFF (restaurado)")
         end
     end
 })
@@ -3677,41 +3123,12 @@ TexturesBox:AddToggle("RemoveSkin", {
     end
 })
 
-local removeMapEnabled = false
-local mapBackup = {}
+local CloudBox = Tabs.Cloud:AddLeftGroupbox("Flashlight", "flashlight")
 
-TexturesBox:AddToggle("RemoveMap", {
-    Text = "Remove Map",
-    Default = false,
-    Callback = function(v)
-        removeMapEnabled = v
-
-        if not v then
-            for part, data in pairs(mapBackup) do
-                if part and part.Parent then
-                    part.Material = data.Material
-                end
-            end
-            table.clear(mapBackup)
-            return
-        end
-
-        for _, obj in ipairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") then
-                mapBackup[obj] = {Material = obj.Material}
-                obj.Material = Enum.Material.SmoothPlastic
-            end
-        end
-    end
-})
-
--- ================= CLOUD =================
-local CloudBox = Tabs.Cloud:AddLeftGroupbox("Flashlight Settings", "flashlight")
-
-local FlashlightBrightness = 1
+local Brightness2 = 1
 
 CloudBox:AddToggle("Flashlight", {
-	Text = "Flashlight",
+	Text = "Enable",
 	Default = false,
 
 	Callback = function(Value)
@@ -3734,7 +3151,7 @@ CloudBox:AddToggle("Flashlight", {
 			light.Name = "Light"
 			light.Range = 120
 			light.Shadows = false
-			light.Brightness = FlashlightBrightness
+			light.Brightness = Brightness2
 			light.Parent = hrp
 		else
 			local old = hrp:FindFirstChild("Light")
@@ -3745,7 +3162,7 @@ CloudBox:AddToggle("Flashlight", {
 	end,
 })
 
-CloudBox:AddSlider("FlashlightBrightness", {
+CloudBox:AddSlider("Brightness2", {
 	Text = "Brightness",
 	Default = 1,
 	Min = 0,
@@ -3753,7 +3170,7 @@ CloudBox:AddSlider("FlashlightBrightness", {
 	Rounding = 2,
 
 	Callback = function(Value)
-		FlashlightBrightness = Value
+		Brightness2 = Value
 
 		local Players = game:GetService("Players")
 		local LocalPlayer = Players.LocalPlayer
@@ -3776,9 +3193,10 @@ local CloudBox = Tabs.Cloud:AddLeftGroupbox("Calibrator", "monitor")
 local HttpService = game:GetService("HttpService")
 local Lighting = game:GetService("Lighting")
 
-local FILE_NAME = "calibrator.json"
+local FILE_NAME = "ColorCalibration.json"
 
 local defaultData = {
+    Enabled = false,
     Color = {255, 255, 255},
     Brightness = 0,
     Contrast = 0,
@@ -3791,16 +3209,27 @@ end
 
 local function loadData()
     if canUseFile() and isfile(FILE_NAME) then
-        local success, data = pcall(function()
+        local success, loaded = pcall(function()
             return HttpService:JSONDecode(readfile(FILE_NAME))
         end)
 
-        if success and typeof(data) == "table" then
-            data.Color = data.Color or defaultData.Color
-            data.Brightness = data.Brightness or defaultData.Brightness
-            data.Contrast = data.Contrast or defaultData.Contrast
-            data.Saturation = data.Saturation or defaultData.Saturation
-            return data
+        if success and typeof(loaded) == "table" then
+            loaded.Enabled = loaded.Enabled or false
+            loaded.Color = loaded.Color or table.clone(defaultData.Color)
+
+            if loaded.Brightness == nil then
+                loaded.Brightness = defaultData.Brightness
+            end
+
+            if loaded.Contrast == nil then
+                loaded.Contrast = defaultData.Contrast
+            end
+
+            if loaded.Saturation == nil then
+                loaded.Saturation = defaultData.Saturation
+            end
+
+            return loaded
         end
     end
 
@@ -3810,10 +3239,21 @@ end
 local lastSavedJSON = ""
 
 local function saveData(data)
-    if not canUseFile() then return end
+    if not canUseFile() then
+        return
+    end
 
-    local newJSON = HttpService:JSONEncode(data)
-    if newJSON == lastSavedJSON then return end
+    local success, newJSON = pcall(function()
+        return HttpService:JSONEncode(data)
+    end)
+
+    if not success then
+        return
+    end
+
+    if newJSON == lastSavedJSON then
+        return
+    end
 
     lastSavedJSON = newJSON
 
@@ -3825,12 +3265,20 @@ end
 local data = loadData()
 lastSavedJSON = HttpService:JSONEncode(data)
 
-local savedColor = data.Color
-local savedBrightness = data.Brightness
-local savedContrast = data.Contrast
-local savedSaturation = data.Saturation
-
 local filtro
+
+local function destroyFilter()
+    if filtro then
+        filtro:Destroy()
+        filtro = nil
+    end
+
+    local old = Lighting:FindFirstChild("FiltroBranco")
+
+    if old then
+        old:Destroy()
+    end
+end
 
 local function getFilter()
     if not filtro or not filtro.Parent then
@@ -3847,112 +3295,140 @@ local function getFilter()
 end
 
 local function applyFilter()
+    if not data.Enabled then
+        destroyFilter()
+        return
+    end
+
     local filtro = getFilter()
 
-    filtro.TintColor = Color3.fromRGB(savedColor[1], savedColor[2], savedColor[3])
-    filtro.Brightness = savedBrightness
-    filtro.Contrast = savedContrast
-    filtro.Saturation = savedSaturation
+    filtro.TintColor = Color3.fromRGB(
+        data.Color[1],
+        data.Color[2],
+        data.Color[3]
+    )
+
+    filtro.Brightness = data.Brightness
+    filtro.Contrast = data.Contrast
+    filtro.Saturation = data.Saturation
 end
 
-local old = Lighting:FindFirstChild("FiltroBranco")
-if old then old:Destroy() end
-
-local updating = false
+destroyFilter()
 
 CloudBox:AddToggle("Calibrator", {
     Text = "Enable",
-    Default = false,
+    Default = data.Enabled,
+
     Callback = function(state)
+        data.Enabled = state
+
         if state then
             applyFilter()
         else
-            if filtro then
-                filtro:Destroy()
-                filtro = nil
-            end
+            destroyFilter()
         end
+
+        saveData(data)
     end,
 })
 
 CloudBox:AddButton({
     Text = "Reset all",
+
     Func = function()
         data = table.clone(defaultData)
 
-        savedColor = data.Color
-        savedBrightness = data.Brightness
-        savedContrast = data.Contrast
-        savedSaturation = data.Saturation
+        if data.Enabled then
+            applyFilter()
+        else
+            destroyFilter()
+        end
 
-        applyFilter()
         saveData(data)
     end,
 })
 
 CloudBox:AddLabel("Color"):AddColorPicker("ColorPicker", {
-    Default = Color3.fromRGB(savedColor[1], savedColor[2], savedColor[3]),
-    Title = "Color",
-    Callback = function(Value)
-        if updating then return end
+    Default = Color3.fromRGB(
+        data.Color[1],
+        data.Color[2],
+        data.Color[3]
+    ),
 
-        savedColor = {
+    Title = "Color",
+
+    Callback = function(Value)
+        data.Color = {
             math.clamp(math.round(Value.R * 255), 0, 255),
             math.clamp(math.round(Value.G * 255), 0, 255),
             math.clamp(math.round(Value.B * 255), 0, 255)
         }
 
-        data.Color = savedColor
+        if data.Enabled then
+            applyFilter()
+        end
 
-        applyFilter()
         saveData(data)
     end,
 })
 
 CloudBox:AddSlider("Brightness", {
     Text = "Brightness",
-    Default = savedBrightness,
+    Default = data.Brightness,
     Min = -1,
     Max = 1,
     Rounding = 2,
+
     Callback = function(Value)
-        if updating then return end
-        savedBrightness = Value
         data.Brightness = Value
-        applyFilter()
+
+        if data.Enabled then
+            applyFilter()
+        end
+
         saveData(data)
     end,
 })
 
 CloudBox:AddSlider("Contrast", {
     Text = "Contrast",
-    Default = savedContrast,
+    Default = data.Contrast,
     Min = -1,
     Max = 1,
     Rounding = 2,
+
     Callback = function(Value)
-        if updating then return end
-        savedContrast = Value
         data.Contrast = Value
-        applyFilter()
+
+        if data.Enabled then
+            applyFilter()
+        end
+
         saveData(data)
     end,
 })
 
 CloudBox:AddSlider("Saturation", {
     Text = "Saturation",
-    Default = savedSaturation,
+    Default = data.Saturation,
     Min = -1,
     Max = 1,
     Rounding = 2,
+
     Callback = function(Value)
-        if updating then return end
-        savedSaturation = Value
         data.Saturation = Value
-        applyFilter()
+
+        if data.Enabled then
+            applyFilter()
+        end
+
         saveData(data)
     end,
 })
+
+if data.Enabled then
+    applyFilter()
+end
 
 local CloudBox = Tabs.Cloud:AddRightGroupbox("Cloud", "cloud")
 
@@ -4091,7 +3567,7 @@ CloudBox:AddButton({
 
 local CloudBox = Tabs.Cloud:AddRightGroupbox("Shadow Settings", "leaf")
 
-CloudBox:AddToggle("Enable Shadows", {
+CloudBox:AddButton("Enable Shadows", {
 	Text = "Enable Shadows",
 	Callback = function()
 		local Lighting = game:GetService("Lighting")
@@ -4099,7 +3575,7 @@ CloudBox:AddToggle("Enable Shadows", {
 	end
 })
 
-CloudBox:AddToggle("Disable Shadows", {
+CloudBox:AddButton("Disable Shadows", {
 	Text = "Disable Shadows",
 	Callback = function()
 		local Lighting = game:GetService("Lighting")
@@ -4107,7 +3583,6 @@ CloudBox:AddToggle("Disable Shadows", {
 	end
 })
 
--- ================= CROSS HAIR =================
 local CrossHairBox = Tabs.CrossHair:AddLeftGroupbox("Cursor Settings", "mouse-pointer-2")
 
 local UIS = game:GetService("UserInputService")
@@ -4387,100 +3862,9 @@ CrossHairBox:AddButton("CursorWhite", {
         crosshair.Position = UDim2.new(0.5, 0, 0.5, 0)
         crosshair.Parent = gui
 
-        local success = pcall(function()
+        pcall(function()
             crosshair.Image = "rbxassetid://78187737793256"
         end)
-
-        if not success then
-            warn("NÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o foi possÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â­vel carregar o crosshair ID")
-        end
-    end
-})
-
-local CrossHairBox = Tabs.CrossHair:AddRightGroupbox("NoobTwoPointOh", "cross")
-
-CrossHairBox:AddButton("Sonic", {
-    Text = "Sonic",
-
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("MobileCursor")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "MobileCursor"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local cursor = Instance.new("ImageLabel")
-        cursor.Size = UDim2.new(0, 80, 0, 80)
-        cursor.BackgroundTransparency = 1
-        cursor.AnchorPoint = Vector2.new(0.5, 0.5)
-        cursor.Position = UDim2.new(0.5, 0, 0.5, 0)
-        cursor.Image = "rbxassetid://71932994463561"
-        cursor.Parent = gui
-    end
-})
-
-CrossHairBox:AddButton("Mario", {
-    Text = "Mario",
-
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("MobileCursor")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "MobileCursor"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local cursor = Instance.new("ImageLabel")
-        cursor.Size = UDim2.new(0, 80, 0, 80)
-        cursor.BackgroundTransparency = 1
-        cursor.AnchorPoint = Vector2.new(0.5, 0.5)
-        cursor.Position = UDim2.new(0.5, 0, 0.5, 0)
-
-        cursor.Image = "rbxassetid://135100663487281"
-
-        cursor.Parent = gui
-    end
-})
-
-CrossHairBox:AddButton("Beam", {
-    Text = "Beam",
-
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("MobileCursor")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "MobileCursor"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local cursor = Instance.new("ImageLabel")
-        cursor.Size = UDim2.new(0, 80, 0, 80)
-        cursor.BackgroundTransparency = 1
-        cursor.AnchorPoint = Vector2.new(0.5, 0.5)
-        cursor.Position = UDim2.new(0.5, 0, 0.5, 0)
-
-        cursor.Image = "rbxassetid://77983629091490"
-
-        cursor.Parent = gui
     end
 })
 
@@ -5090,99 +4474,313 @@ CrossHairBox:AddButton("InosukeKatana", {
     end
 })
 
-local CrossHairBox = Tabs.CrossHair:AddLeftGroupbox("Sonic the Hedgehog", "zap")
+local SoundBox = Tabs.Sound:AddLeftGroupbox("Settings", "cog")
 
-CrossHairBox:AddButton("Sonic", {
-    Text = "Sonic",
+local Players = game:GetService("Players")
 
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
+local FootstepVolume = 1
+local JumpVolume = 1
+local FallVolume = 1
 
-        local old = pg:FindFirstChild("CrosshairGui")
-        if old then old:Destroy() end
+local function GetType(name)
+    name = name:lower()
 
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "CrosshairGui"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
+    if name:find("run") or name:find("walk") or name:find("step") or name:find("foot") then
+        return "Footsteps"
+    end
 
-        local crosshair = Instance.new("ImageLabel")
-        crosshair.Size = UDim2.new(0, 40, 0, 40)
-        crosshair.BackgroundTransparency = 1
-        crosshair.AnchorPoint = Vector2.new(0.5, 0.5)
-        crosshair.Position = UDim2.new(0.5, 0, 0.5, 0)
-        crosshair.Parent = gui
+    if name:find("jump") then
+        return "Jump"
+    end
 
-        pcall(function()
-            crosshair.Image = "rbxassetid://70790216563517"
-        end)
+    if name:find("fall") or name:find("freefall") then
+        return "Fall"
+    end
+
+    return nil
+end
+
+local function Apply(sound)
+    if not sound:IsA("Sound") then return end
+
+    local t = GetType(sound.Name)
+    if not t then return end
+
+    if t == "Footsteps" then
+        sound.Volume = FootstepVolume
+    elseif t == "Jump" then
+        sound.Volume = JumpVolume
+    elseif t == "Fall" then
+        sound.Volume = FallVolume
+    end
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        for _, plr in ipairs(Players:GetPlayers()) do
+            local char = plr.Character
+            if char then
+                for _, obj in ipairs(char:GetDescendants()) do
+                    Apply(obj)
+                end
+            end
+        end
+    end
+end)
+
+SoundBox:AddSlider("FootstepVolumeSlider", {
+    Text = "FootSteps Volume",
+    Default = 1,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
+
+    Callback = function(value)
+        FootstepVolume = value
+        ApplyAllVolumes()
     end
 })
 
-CrossHairBox:AddButton("Shadow", {
-    Text = "Shadow",
+SoundBox:AddSlider("JumpVolumeSlider", {
+    Text = "Jump Volume",
+    Default = 1,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
 
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("CrosshairGui")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "CrosshairGui"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local crosshair = Instance.new("ImageLabel")
-        crosshair.Size = UDim2.new(0, 40, 0, 40)
-        crosshair.BackgroundTransparency = 1
-        crosshair.AnchorPoint = Vector2.new(0.5, 0.5)
-        crosshair.Position = UDim2.new(0.5, 0, 0.5, 0)
-        crosshair.Parent = gui
-
-        pcall(function()
-            crosshair.Image = "rbxassetid://117298779533796"
-        end)
+    Callback = function(value)
+        JumpVolume = value
+        ApplyAllVolumes()
     end
 })
 
-CrossHairBox:AddButton("AmyRose", {
-    Text = "Amy Rose",
+SoundBox:AddSlider("FallVolumeSlider", {
+    Text = "Fall Volume",
+    Default = 1,
+    Min = 0,
+    Max = 10,
+    Rounding = 1,
 
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("CrosshairGui")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "CrosshairGui"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local crosshair = Instance.new("ImageLabel")
-        crosshair.Size = UDim2.new(0, 40, 0, 40)
-        crosshair.BackgroundTransparency = 1
-        crosshair.AnchorPoint = Vector2.new(0.5, 0.5)
-        crosshair.Position = UDim2.new(0.5, 0, 0.5, 0)
-        crosshair.Parent = gui
-
-        pcall(function()
-            crosshair.Image = "rbxassetid://112652960004023"
-        end)
+    Callback = function(value)
+        FallVolume = value
+        ApplyAllVolumes()
     end
 })
 
--- ================= UI SETTINGS =================
+SoundBox:AddButton({
+    Text = "Reset Volumes",
+    Func = function()
+        FootstepVolume = 1
+        JumpVolume = 1
+        FallVolume = 1
+
+        Library.Options["FootstepVolumeSlider"]:SetValue(1)
+        Library.Options["JumpVolumeSlider"]:SetValue(1)
+        Library.Options["FallVolumeSlider"]:SetValue(1)
+
+        ApplyAllVolumes()
+    end
+})
+
+task.defer(function()
+    task.wait(2)
+    ApplyAllVolumes()
+end)
+
+local function ApplySound(soundType, soundId)
+    for _, plr in pairs(Players:GetPlayers()) do
+        local character = plr.Character
+
+        if character then
+            for _, obj in pairs(character:GetDescendants()) do
+                if obj:IsA("Sound") then
+                    local name = obj.Name:lower()
+
+                    if soundType == "Footsteps" then
+                        if string.find(name, "run")
+                        or string.find(name, "walk")
+                        or string.find(name, "step") then
+                            obj.SoundId = "rbxassetid://" .. soundId
+                            obj.Volume = FootstepVolume
+                        end
+                    end
+                    
+                    if soundType == "Jump" then
+                        if string.find(name, "jump") then
+                            obj.SoundId = "rbxassetid://" .. soundId
+                            obj.Volume = JumpVolume
+                        end
+                    end
+
+                    if soundType == "Fall" then
+                        if string.find(name, "fall") then
+                            obj.SoundId = "rbxassetid://" .. soundId
+                            obj.Volume = FallVolume
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+Players.PlayerAdded:Connect(function(plr)
+    plr.CharacterAdded:Connect(function()
+        task.wait(2)
+        UpdateVolumes()
+    end)
+end)
+
+for _, plr in pairs(Players:GetPlayers()) do
+    plr.CharacterAdded:Connect(function()
+        task.wait(2)
+        UpdateVolumes()
+    end)
+end
+
+SoundBox:AddButton({
+    Text = "Reset Sounds",
+    Func = function()
+        ApplySound("Footsteps", "79392671800290")
+        ApplySound("Jump", "80853972291847")
+        ApplySound("Fall", "88947883822456")
+    end
+})
+
+local NormalBox = Tabs.Sound:AddLeftGroupbox("Normal", "user")
+
+NormalBox:AddButton({
+    Text = "FootSteps",
+    Func = function()
+        ApplySound("Footsteps", "79392671800290")
+    end
+})
+
+NormalBox:AddButton({
+    Text = "Jump",
+    Func = function()
+        ApplySound("Jump", "80853972291847")
+    end
+})
+
+NormalBox:AddButton({
+    Text = "Fall",
+    Func = function()
+        ApplySound("Fall", "88947883822456")
+    end
+})
+
+local FacilityBox = Tabs.Sound:AddRightGroupbox("Facility Gamer", "chef-hat")
+
+FacilityBox:AddButton({
+    Text = "FootSteps",
+    Func = function()
+        ApplySound("Footsteps", "131592620665625")
+    end
+})
+
+FacilityBox:AddButton({
+    Text = "Jump",
+    Func = function()
+        ApplySound("Jump", "89459688918065")
+    end
+})
+
+local NoobBox = Tabs.Sound:AddRightGroupbox("NoobTwoPointOh", "bot")
+
+NoobBox:AddButton({
+    Text = "FootSteps",
+    Func = function()
+        ApplySound("Footsteps", "110709356093026")
+    end
+})
+
+NoobBox:AddButton({
+    Text = "Jump",
+    Func = function()
+        ApplySound("Jump", "124276657634407")
+    end
+})
+
+local MorcegoBox = Tabs.Sound:AddLeftGroupbox("Tio Morcego", "moon")
+
+MorcegoBox:AddButton({
+    Text = "FootSteps",
+    Func = function()
+        ApplySound("Footsteps", "97458293386939")
+    end
+})
+
+MorcegoBox:AddButton({
+    Text = "Jump",
+    Func = function()
+        ApplySound("Jump", "72503238596964")
+    end
+})
+
+MorcegoBox:AddButton({
+    Text = "Fall",
+    Func = function()
+        ApplySound("Fall", "83702883984130")
+    end
+})
+
+local FKPSBox = Tabs.Sound:AddRightGroupbox("FKPS", "skull")
+
+FKPSBox:AddButton({
+    Text = "FootSteps",
+    Func = function()
+        ApplySound("Footsteps", "97733831736820")
+    end
+})
+
+FKPSBox:AddButton({
+    Text = "Jump",
+    Func = function()
+        ApplySound("Jump", "86031664547378")
+    end
+})
+
+FKPSBox:AddButton({
+    Text = "Fall",
+    Func = function()
+        ApplySound("Fall", "78180192109919")
+    end
+})
+
+local ExtrasBox = Tabs.Sound:AddLeftGroupbox("Extras", "boxes")
+
+ExtrasBox:AddButton({
+    Text = "Pew Jump",
+    Func = function()
+        ApplySound("Jump", "136299701781122")
+    end
+})
+
+ExtrasBox:AddButton({
+    Text = "Sharingan Jump",
+    Func = function()
+        ApplySound("Jump", "118102230060662")
+    end
+})
+
+ExtrasBox:AddButton({
+    Text = "Bubble Jump",
+    Func = function()
+        ApplySound("Jump", "129415490412106")
+    end
+})
+
+ExtrasBox:AddButton({
+    Text = "RF Jump",
+    Func = function()
+        ApplySound("Jump", "80276851298640")
+    end
+})
+
+task.wait(2)
+UpdateVolumes()
+
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
 
@@ -5194,4 +4792,4 @@ SaveManager:SetFolder("ObsidianHub/configs")
 SaveManager:BuildConfigSection(Tabs["UI Settings"])
 ThemeManager:ApplyToTab(Tabs["UI Settings"])
 
-Library:Notify("Updated Eclipse!") 
+Library:Notify("Added new script Sensitivity & All sounds.")
