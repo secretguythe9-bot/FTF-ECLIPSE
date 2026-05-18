@@ -345,8 +345,8 @@ local playerHighlight = false
 playerCache = {}
 playerConnections = {}
 
-EspPlayersBox:AddToggle("Highlight ESP", {
-    Text = "Highlight ESP",
+EspPlayersBox:AddToggle("Highlights", {
+    Text = "Highlights",
     Default = false,
     Callback = function(state)
         playerHighlight = state
@@ -440,8 +440,8 @@ local playerBox = false
 playerBoxCache = {}
 playerBoxConnections = {}
 
-EspPlayersBox:AddToggle("Box ESP", {
-    Text = "Box ESP",
+EspPlayersBox:AddToggle("Box", {
+    Text = "Box",
     Default = false,
     Callback = function(state)
         pcall(function()
@@ -585,140 +585,6 @@ EspPlayersBox:AddToggle("Box ESP", {
                 if playerBoxConnections.removing then
                     playerBoxConnections.removing:Disconnect()
                     playerBoxConnections.removing = nil
-                end
-            end
-        end)
-    end
-})
-
-local playerNameESP = false
-playerNameCache = {}
-playerNameConnections = {}
-
-EspPlayersBox:AddToggle("Name ESP", {
-    Text = "Name ESP",
-    Default = false,
-    Callback = function(state)
-        pcall(function()
-            playerNameESP = state
-
-            local Players = game:GetService("Players")
-            local LocalPlayer = Players.LocalPlayer
-
-            local function clearESP(character)
-                local obj = playerNameCache[character]
-                if obj then
-                    pcall(function()
-                        obj:Destroy()
-                    end)
-                    playerNameCache[character] = nil
-                end
-            end
-
-            local function applyNameESP(player, character, color)
-                if not character then return end
-
-                local head = character:FindFirstChild("Head")
-                if not head then return end
-
-                local existing = playerNameCache[character]
-                if existing then
-                    pcall(function()
-                        existing.TextLabel.TextColor3 = color
-                        existing.TextLabel.Text = player.Name
-                    end)
-                    return
-                end
-
-                local billboard = Instance.new("BillboardGui")
-                billboard.Name = "NameESP"
-                billboard.Adornee = head
-                billboard.AlwaysOnTop = true
-                billboard.Size = UDim2.new(0, 100, 0, 25)
-                billboard.StudsOffset = Vector3.new(0, 2.5, 0)
-
-                local text = Instance.new("TextLabel")
-                text.Size = UDim2.new(1, 0, 1, 0)
-                text.BackgroundTransparency = 1
-                text.TextSize = 12
-                text.Font = Enum.Font.SourceSansBold
-                text.Text = player.Name
-                text.TextColor3 = color
-                text.Parent = billboard
-
-                billboard.Parent = head
-
-                playerNameCache[character] = billboard
-            end
-
-            if state then
-                local playerList = Players:GetPlayers()
-
-                playerNameConnections.loop = task.spawn(function()
-                    while playerNameESP do
-                        task.wait(1)
-
-                        for i = 1, #playerList do
-                            local player = playerList[i]
-
-                            if player ~= LocalPlayer and player.Character then
-                                local color
-                                if getBeast and player == getBeast() then
-                                    color = Color3.fromRGB(210, 0, 0)
-                                else
-                                    color = Color3.fromRGB(0, 210, 0)
-                                end
-
-                                pcall(function()
-                                    applyNameESP(player, player.Character, color)
-                                end)
-                            end
-                        end
-                    end
-                end)
-
-                playerNameConnections.added = Players.PlayerAdded:Connect(function(player)
-                    playerList[#playerList + 1] = player
-                end)
-
-                playerNameConnections.removing = Players.PlayerRemoving:Connect(function(player)
-                    if player.Character then
-                        pcall(function()
-                            clearESP(player.Character)
-                        end)
-                    end
-
-                    for i = 1, #playerList do
-                        if playerList[i] == player then
-                            table.remove(playerList, i)
-                            break
-                        end
-                    end
-                end)
-
-            else
-                for character, obj in next, playerNameCache do
-                    if obj then
-                        pcall(function()
-                            obj:Destroy()
-                        end)
-                    end
-                    playerNameCache[character] = nil
-                end
-
-                if playerNameConnections.loop then
-                    task.cancel(playerNameConnections.loop)
-                    playerNameConnections.loop = nil
-                end
-
-                if playerNameConnections.added then
-                    playerNameConnections.added:Disconnect()
-                    playerNameConnections.added = nil
-                end
-
-                if playerNameConnections.removing then
-                    playerNameConnections.removing:Disconnect()
-                    playerNameConnections.removing = nil
                 end
             end
         end)
