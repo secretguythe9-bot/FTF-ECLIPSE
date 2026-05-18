@@ -4748,7 +4748,7 @@ FKPSBox:AddButton({
     end
 })
 
-local ExtrasBox = Tabs.Sound:AddLeftGroupbox("Extras", "boxes")
+local ExtrasBox = Tabs.Sound:AddLeftGroupbox("Extras Jumps", "boxes")
 
 ExtrasBox:AddButton({
     Text = "Pew Jump",
