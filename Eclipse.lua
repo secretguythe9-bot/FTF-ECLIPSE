@@ -6,7 +6,7 @@ local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
 local Window = Library:CreateWindow({
     Title = "FTF Eclipse",
-    Footer = "version: 2.1",
+    Footer = "version: 2.2",
     Icon = "97649528750741",
     CornerRadius = 6,
     NotifySide = "Right",
@@ -18,7 +18,7 @@ local Window = Library:CreateWindow({
 local Tabs = {
     Esp = Window:AddTab("Highlights", "flame", "Visual outlines to highlights players & objects"),
     Setting = Window:AddTab("Misc", "box", "Extra functionality"),
-    Visual = Window:AddTab("Profile", "telescope", "Adjust FOV, camera and nickname visuals"),
+    Visual = Window:AddTab("Profile", "video", "Adjust FOV, avatar & nickname visuals"),
     Progress = Window:AddTab("Progress", "clock-fading", "progress information for objects and humanoids"),
     Textures = Window:AddTab("Textures", "map", "Texture and material customization tools"),
     Cloud = Window:AddTab("Atmosphere", "cloudy", "Customize fog, shadows and environmental visuals"),
@@ -1001,7 +1001,28 @@ SettingBox:AddSlider("HighJumpSlider", {
     end
 })
 
-local SettingBox = Tabs.Setting:AddRightGroupbox("Rejoining", "external-link")
+local SettingBox = Tabs.Setting:AddRightGroupbox("Rejoin & AntiAFK", "activity")
+
+local AntiAFKEnabled = false
+
+SettingBox:AddToggle("AntiAFK", {
+    Text = "Anti AFK",
+    Default = false,
+
+    Callback = function(v)
+        AntiAFKEnabled = v
+    end
+})
+
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+
+Players.LocalPlayer.Idled:Connect(function()
+    if AntiAFKEnabled then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end
+end)
 
 local TeleportService = game:GetService("TeleportService")
 local player = game.Players.LocalPlayer
@@ -1012,6 +1033,16 @@ SettingBox:AddButton({
         TeleportService:Teleport(game.PlaceId, player)
     end
 })
+
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
+
+Players.LocalPlayer.Idled:Connect(function()
+    if AntiAFKEnabled then
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end
+end)
 
 local SettingBox = Tabs.Setting:AddRightGroupbox("Tracking", "locate-fixed")
 
@@ -1383,34 +1414,63 @@ SettingBox:AddToggle("Hitbox Expander", {
 	end
 })
 
-local p,rs = game.Players.LocalPlayer, game:GetService("RunService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local p = Players.LocalPlayer
 
 local on,name,level,icon = false,"MaybeKayque",100,""
+
 local icons = {
-    VIP="rbxassetid://1188562340", QA="rbxassetid://18940008283",
-    CON="rbxassetid://18940005647", Casey="rbxassetid://131476591459702",
-    DEV="rbxassetid://18940006678", MrWindy="rbxassetid://18937953345",
+    VIP="rbxassetid://1188562340",
+    QA="rbxassetid://18940008283",
+    CON="rbxassetid://18940005647",
+    Casey="rbxassetid://131476591459702",
+    DEV="rbxassetid://18940006678",
+    MrWindy="rbxassetid://18937953345",
     MOD="rbxassetid://105155010224102"
 }
 
 local n,l,i,orig = nil,nil,nil,{}
 
 local function setup()
-    local f = p.PlayerGui:WaitForChild("ScreenGui").PlayerNamesFrame:WaitForChild(p.Name.."PlayerFrame")
-    n,l = f.NameLabel,f.LevelLabel
-    for _,v in ipairs(f:GetDescendants()) do
-        if v:IsA("ImageLabel") or v:IsA("ImageButton") then i=v break end
+    local success, frame = pcall(function()
+        return p.PlayerGui:WaitForChild("ScreenGui")
+            .PlayerNamesFrame:WaitForChild(p.Name.."PlayerFrame")
+    end)
+
+    if not success or not frame then
+        return
     end
-    orig.n,orig.l,orig.i = n.Text,l.Text,i and i.Image
+
+    n = frame.NameLabel
+    l = frame.LevelLabel
+
+    for _,v in ipairs(frame:GetDescendants()) do
+        if v:IsA("ImageLabel") or v:IsA("ImageButton") then
+            i = v
+            break
+        end
+    end
+
+    orig.n = n.Text
+    orig.l = l.Text
+    orig.i = i and i.Image
 end
 
 local function update()
     for _,v in ipairs(p.PlayerGui:GetDescendants()) do
-        if (v:IsA("TextLabel") or v:IsA("TextButton")) and v.Text~="" then
-            orig[v]=orig[v] or v.Text
+        if (v:IsA("TextLabel") or v:IsA("TextButton")) and v.Text ~= "" then
+            orig[v] = orig[v] or v.Text
+
             if on and v.Text:find(p.Name) then
-                local base = orig[v]:gsub(p.Name,""):gsub("%s+"," "):gsub("^%s+",""):gsub("%s+$","")
-                v.Text = base=="" and name or (name.." "..base)
+                local base = orig[v]
+                    :gsub(p.Name,"")
+                    :gsub("%s+"," ")
+                    :gsub("^%s+","")
+                    :gsub("%s+$","")
+
+                v.Text = base == "" and name or (name.." "..base)
             elseif not on then
                 v.Text = orig[v]
             end
@@ -1419,57 +1479,370 @@ local function update()
 end
 
 local function apply()
-    if not n then return end
-    if on then
-        n.Text, l.Text = name, tostring(level)
-        if i and icon~="" then i.Image = icon end
-    else
-        n.Text, l.Text = orig.n, orig.l
-        if i and orig.i then i.Image = orig.i end
+    if not n then
+        setup()
     end
+
+    if not n then return end
+
+    if on then
+        n.Text = name
+        l.Text = tostring(level)
+
+        if i and icon ~= "" then
+            i.Image = icon
+        end
+    else
+        n.Text = orig.n
+        l.Text = orig.l
+
+        if i and orig.i then
+            i.Image = orig.i
+        end
+    end
+
     update()
 end
 
-rs.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function()
     if on and n then
-        n.Text, l.Text = name, tostring(level)
-        if i and icon~="" then i.Image = icon end
-        update()
+        n.Text = name
+        l.Text = tostring(level)
+
+        if i and icon ~= "" then
+            i.Image = icon
+        end
     end
 end)
 
-p.CharacterAdded:Connect(function(c)
-    task.wait(.5)
-    local h=c:FindFirstChildOfClass("Humanoid")
-    if h then h.DisplayName = on and name or p.DisplayName end
+task.spawn(function()
+    setup()
+    apply()
 end)
 
-task.spawn(function() setup() apply() end)
+local AvatarEnabled = false
+local CurrentUserId = nil
+local OriginalDescription = nil
+local FixLoop = nil
 
--- UI
+pcall(function()
+    OriginalDescription = Players:GetHumanoidDescriptionFromUserId(p.UserId)
+end)
+
+local function SmartWeld(char, accessory)
+    local handle = accessory:FindFirstChild("Handle")
+
+    if not handle then
+        return
+    end
+
+    handle.Anchored = false
+    handle.CanCollide = false
+    handle.Massless = true
+
+    accessory.Parent = char
+
+    local accAtt = handle:FindFirstChildWhichIsA("Attachment")
+    local charAtt, targetPart
+
+    if accAtt then
+        for _, partName in pairs({"Head", "Torso"}) do
+            local part = char:FindFirstChild(partName)
+
+            if part and part:FindFirstChild(accAtt.Name) then
+                charAtt = part[accAtt.Name]
+                targetPart = part
+                break
+            end
+        end
+    end
+
+    local weld = Instance.new("Weld")
+    weld.Part1 = handle
+
+    if targetPart and charAtt then
+        weld.Part0 = targetPart
+        weld.C0 = charAtt.CFrame
+        weld.C1 = accAtt.CFrame
+    else
+        targetPart = char:FindFirstChild("Head")
+
+        if targetPart then
+            weld.Part0 = targetPart
+            weld.C0 = CFrame.new(0, 0.5, 0)
+        end
+    end
+
+    if weld.Part0 then
+        weld.Parent = handle
+    end
+end
+
+local function StartFixLoop(char, colorTable, textureId)
+    if FixLoop then
+        FixLoop:Disconnect()
+    end
+
+    FixLoop = RunService.RenderStepped:Connect(function()
+        if not char or not char.Parent then
+            if FixLoop then
+                FixLoop:Disconnect()
+            end
+            return
+        end
+
+        for partName, color in pairs(colorTable) do
+            local part = char:FindFirstChild(partName)
+
+            if part and part:IsA("BasePart") then
+                part.Color = color
+                part.Material = Enum.Material.SmoothPlastic
+
+                local mesh = part:FindFirstChildOfClass("SpecialMesh")
+
+                if mesh then
+                    if partName == "Head" then
+                        mesh.TextureId = textureId or ""
+                    else
+                        mesh.TextureId = ""
+                    end
+
+                    mesh.VertexColor = Vector3.new(1,1,1)
+                end
+            end
+        end
+    end)
+end
+
+local function ApplyDescription(desc)
+    local char = p.Character
+
+    if not char then
+        return
+    end
+
+    local dummy = Players:CreateHumanoidModelFromDescription(
+        desc,
+        Enum.HumanoidRigType.R6
+    )
+
+    dummy.Parent = workspace
+    dummy:SetPrimaryPartCFrame(CFrame.new(0,-500,0))
+
+    task.wait(1)
+
+    local colors = {
+        ["Head"] = desc.HeadColor,
+        ["Torso"] = desc.TorsoColor,
+        ["Left Arm"] = desc.LeftArmColor,
+        ["Right Arm"] = desc.RightArmColor,
+        ["Left Leg"] = desc.LeftLegColor,
+        ["Right Leg"] = desc.RightLegColor
+    }
+
+    for _, v in pairs(char:GetChildren()) do
+        if v:IsA("Accessory")
+        or v:IsA("Hat")
+        or v:IsA("Shirt")
+        or v:IsA("Pants")
+        or v:IsA("CharacterMesh")
+        or v:IsA("BodyColors")
+        or v:IsA("ShirtGraphic") then
+            v:Destroy()
+        end
+    end
+
+    if char.Head:FindFirstChild("face") then
+        char.Head.face:Destroy()
+    end
+
+    local dummyMesh = dummy.Head:FindFirstChildOfClass("SpecialMesh")
+    local myMesh = char.Head:FindFirstChildOfClass("SpecialMesh")
+
+    if not myMesh then
+        myMesh = Instance.new("SpecialMesh")
+        myMesh.Parent = char.Head
+    end
+
+    local textureId = ""
+
+    if dummyMesh then
+        myMesh.MeshType = dummyMesh.MeshType
+        myMesh.MeshId = dummyMesh.MeshId
+        myMesh.Scale = dummyMesh.Scale
+        myMesh.TextureId = dummyMesh.TextureId
+
+        textureId = dummyMesh.TextureId
+    end
+
+    myMesh.VertexColor = Vector3.new(1,1,1)
+
+    for _, item in pairs(dummy:GetChildren()) do
+        if item:IsA("CharacterMesh")
+        or item:IsA("Shirt")
+        or item:IsA("Pants")
+        or item:IsA("ShirtGraphic") then
+            item:Clone().Parent = char
+        end
+    end
+
+    local face = Instance.new("Decal")
+    face.Name = "face"
+
+    local dummyFace = dummy.Head:FindFirstChild("face")
+
+    if dummyFace then
+        face.Texture = dummyFace.Texture
+    end
+
+    face.Parent = char.Head
+
+    local bc = Instance.new("BodyColors")
+    bc.HeadColor3 = desc.HeadColor
+    bc.TorsoColor3 = desc.TorsoColor
+    bc.LeftArmColor3 = desc.LeftArmColor
+    bc.RightArmColor3 = desc.RightArmColor
+    bc.LeftLegColor3 = desc.LeftLegColor
+    bc.RightLegColor3 = desc.RightLegColor
+    bc.Parent = char
+
+    for _, item in pairs(dummy:GetChildren()) do
+        if item:IsA("Accessory") then
+            SmartWeld(char, item:Clone())
+        end
+    end
+
+    StartFixLoop(char, colors, textureId)
+
+    dummy:Destroy()
+end
+
+local function ApplyAvatar(userId)
+    local success, desc = pcall(function()
+        return Players:GetHumanoidDescriptionFromUserId(userId)
+    end)
+
+    if success and desc then
+        ApplyDescription(desc)
+    end
+end
+
+local function ResetAvatar()
+    if OriginalDescription then
+        ApplyDescription(OriginalDescription)
+    end
+end
+
+p.CharacterAdded:Connect(function()
+    task.wait(2)
+
+    apply()
+
+    if AvatarEnabled and CurrentUserId then
+        ApplyAvatar(CurrentUserId)
+    else
+        ResetAvatar()
+    end
+end)
+
+
 local box = Tabs.Visual:AddLeftTabbox()
+
 local tab = box:AddTab("Nick")
 
 tab:AddToggle("Spoof", {
-    Text="Hide username", Default=false,
-    Callback=function(v) on=v apply() end
+    Text = "Hide Username",
+    Default = false,
+
+    Callback = function(v)
+        on = v
+        apply()
+    end
 })
 
 tab:AddInput("Name", {
-    Text="Username", Default="MaybeKayque", Finished=true,
-    Callback=function(v) name=v if on then apply() end end
+    Text = "Username",
+    Default = "MaybeKayque",
+    Finished = true,
+
+    Callback = function(v)
+        name = v
+
+        if on then
+            apply()
+        end
+    end
 })
 
 tab:AddInput("Level", {
-    Text="Level", Default="100", Finished=true,
-    Callback=function(v) level=tonumber(v) or 100 if on then apply() end end
+    Text = "Level",
+    Default = "100",
+    Finished = true,
+
+    Callback = function(v)
+        level = tonumber(v) or 100
+
+        if on then
+            apply()
+        end
+    end
 })
 
 tab:AddDropdown("Icon", {
-    Text="Icon",
-    Values={"None","VIP","QA","CON","Casey","DEV","MrWindy","MOD"},
-    Default="None",
-    Callback=function(v) icon = (v=="None" and "" or icons[v]) if on then apply() end end
+    Text = "Icon",
+    Values = {"None","VIP","QA","CON","Casey","DEV","MrWindy","MOD"},
+    Default = "None",
+
+    Callback = function(v)
+        icon = (v == "None" and "" or icons[v])
+
+        if on then
+            apply()
+        end
+    end
+})
+
+local AvatarTab = box:AddTab("Avatar")
+
+AvatarTab:AddToggle("AvatarToggle", {
+    Text = "Enable Avatar",
+    Default = false,
+
+    Callback = function(v)
+        AvatarEnabled = v
+
+        if v then
+            if CurrentUserId then
+                ApplyAvatar(CurrentUserId)
+            end
+        else
+            ResetAvatar()
+        end
+    end
+})
+
+AvatarTab:AddInput("AvatarUser", {
+    Text = "Username",
+    Default = "",
+    Finished = true,
+
+    Callback = function(username)
+        if username == "" then
+            return
+        end
+
+        local success, userId = pcall(function()
+            return Players:GetUserIdFromNameAsync(username)
+        end)
+
+        if success and userId then
+            CurrentUserId = userId
+
+            if AvatarEnabled then
+                ApplyAvatar(userId)
+            end
+        end
+    end
 })
 
 local VisualBox = Tabs.Visual:AddRightGroupbox("Fov Camera", "fullscreen")
@@ -4792,4 +5165,4 @@ SaveManager:SetFolder("ObsidianHub/configs")
 SaveManager:BuildConfigSection(Tabs["UI Settings"])
 ThemeManager:ApplyToTab(Tabs["UI Settings"])
 
-Library:Notify("Added new script Sensitivity & All sounds.")
+Library:Notify("Added new script Avatar in Profile & Added new script antiAFK in misc, enjoy for this! ")
