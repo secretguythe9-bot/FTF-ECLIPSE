@@ -4126,32 +4126,6 @@ CrossHairBox:AddButton("Default", {
 
 local CrossHairBox = Tabs.CrossHair:AddLeftGroupbox("Facility Gamer", "cross")
 
-CrossHairBox:AddButton("ArrowFarWhite V1", {
-    Text = "Arrow Far White V1",
-
-    Callback = function()
-        local old = playerGui:FindFirstChild("CustomCursorGui")
-        if old then old:Destroy() end
-
-        local screenGui = Instance.new("ScreenGui")
-        screenGui.Name = "CustomCursorGui"
-        screenGui.IgnoreGuiInset = true
-        screenGui.Parent = playerGui
-
-        local cursorImage = Instance.new("ImageLabel")
-        cursorImage.Size = UDim2.new(0, 20, 0, 20)
-        cursorImage.BackgroundTransparency = 1
-        cursorImage.Image = "rbxassetid://2614612882"
-        cursorImage.AnchorPoint = Vector2.new(0.5, 0.5)
-        cursorImage.Position = UDim2.new(0.5, 0, 0.5, 0)
-        cursorImage.Parent = screenGui
-
-        UIS.MouseIconEnabled = false
-
-        print("Cursor carregado!")
-    end
-})
-
 CrossHairBox:AddButton("ArrowFar", {
     Text = "ArrowFar Green",
     Callback = function()
@@ -4273,36 +4247,6 @@ CrossHairBox:AddButton("L", {
     end
 })
 
-CrossHairBox:AddButton("Pomni", {
-    Text = "Pomni",
-
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("CrosshairGui")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "CrosshairGui"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local crosshair = Instance.new("ImageLabel")
-        crosshair.Size = UDim2.new(0, 30, 0, 30)
-        crosshair.BackgroundTransparency = 1
-        crosshair.AnchorPoint = Vector2.new(0.5, 0.5)
-        crosshair.Position = UDim2.new(0.5, 0, 0.5, 0)
-        crosshair.Parent = gui
-
-        pcall(function()
-            crosshair.Image = "rbxassetid://111669428109199"
-        end)
-    end
-})
-
 CrossHairBox:AddButton("Karambit", {
     Text = "Karambit",
 
@@ -4329,36 +4273,6 @@ CrossHairBox:AddButton("Karambit", {
 
         pcall(function()
             crosshair.Image = "rbxassetid://134671002501092"
-        end)
-    end
-})
-
-CrossHairBox:AddButton("ButtonRed", {
-    Text = "Button Red",
-
-    Callback = function()
-        local Players = game:GetService("Players")
-        local player = Players.LocalPlayer
-        local pg = player:WaitForChild("PlayerGui")
-
-        local old = pg:FindFirstChild("CrosshairGui")
-        if old then old:Destroy() end
-
-        local gui = Instance.new("ScreenGui")
-        gui.Name = "CrosshairGui"
-        gui.ResetOnSpawn = false
-        gui.IgnoreGuiInset = true
-        gui.Parent = pg
-
-        local crosshair = Instance.new("ImageLabel")
-        crosshair.Size = UDim2.new(0, 10, 0, 10)
-        crosshair.BackgroundTransparency = 1
-        crosshair.AnchorPoint = Vector2.new(0.5, 0.5)
-        crosshair.Position = UDim2.new(0.5, 0, 0.5, 0)
-        crosshair.Parent = gui
-
-        pcall(function()
-            crosshair.Image = "rbxassetid://88338831467302"
         end)
     end
 })
@@ -4546,7 +4460,7 @@ CrossHairBox:AddButton("SwordDiamond", {
 })
 
 CrossHairBox:AddButton("SwordYellow", {
-    Text = "Sword Yellow",
+    Text = "Sword Gold",
 
     Callback = function()
         local Players = game:GetService("Players")
