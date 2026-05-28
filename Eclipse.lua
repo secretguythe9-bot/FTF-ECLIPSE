@@ -10,7 +10,9 @@ end
 print("Jogo permitido.")
 
 local Allowed = {
-    [10499617173] = true
+    [10499617173] = true,
+    [9468717299] = true,
+    [10438992675] = true
 }
 
 local Players = game:GetService("Players")
