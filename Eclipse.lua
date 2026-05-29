@@ -14,7 +14,8 @@ local Allowed = {
     [9468717299] = true,
     [10438992675] = true,
     [3386809191] = true,
-    [10957793674] = true
+    [10957793674] = true,
+    [1242712765] = true
 }
 
 local Players = game:GetService("Players")
