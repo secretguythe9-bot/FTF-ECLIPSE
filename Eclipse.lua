@@ -375,7 +375,7 @@ UIS.InputChanged:Connect(function(input)
 end)
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 560, 0, 350)
+frame.Size = UDim2.new(0, 590, 0, 370)
 frame.Position = UDim2.new(0.5, 0, 0.5, 0)
 frame.AnchorPoint = Vector2.new(0.5, 0.5)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -684,15 +684,15 @@ local function CreateToggle(parent, text, default, callback)
 end
 
 local tabs = {
-	{Name = "Highlights", Icon = "flame"},
-	{Name = "Visual", Icon = "eye"},
-	{Name = "Progress", Icon = "clock-4"},
-	{Name = "Textures", Icon = "box"},
-	{Name = "Fog", Icon = "cloudy"},
-	{Name = "Advanced", Icon = "cog"},
-    {Name = "Sensitivity", Icon = "cog"},
-    {Name = "Cross Hair", Icon = "cog"},
-    {Name = "Sounds", Icon = "cog"},
+	{Name = "Highlights", Icon = "rbxassetid://98889659045683"},
+	{Name = "Visual", Icon = "rbxassetid://78134819718605"},
+	{Name = "Progress", Icon = "rbxassetid://129604787551062"},
+	{Name = "Textures", Icon = "rbxassetid://12684119225"},
+	{Name = "Fog", Icon = "rbxassetid://78060803238436"},
+	{Name = "Advanced", Icon = "rbxassetid://4677859281"},
+    {Name = "Sensitivity", Icon = "rbxassetid://14487279051"},
+    {Name = "Cross Hair", Icon = "rbxassetid://83745541516978"},
+    {Name = "Sounds", Icon = "rbxassetid://7203392850"},
 }
 
 local pages = {}
@@ -700,7 +700,7 @@ local tabIndicators = {}
 local tabShines = {}
 
 for i, tab in ipairs(tabs) do
-	local button = Instance.new("TextButton", sidebar)
+	local button = Instance.new("TextButton", sidebar) -- sidebar tem que existir
 	button.Size = UDim2.new(1, 0, 0, 28)
 	button.BackgroundTransparency = 1
 	button.Text = ""
@@ -716,10 +716,19 @@ for i, tab in ipairs(tabs) do
 	indicator.Visible = i == 1
 	tabIndicators[tab.Name] = indicator
 
+	local icon = Instance.new("ImageLabel", button)
+	icon.Size = UDim2.new(0, 16, 0, 16)
+	icon.Position = UDim2.new(0, 8, 0.5, 0)
+	icon.AnchorPoint = Vector2.new(0, 0.5)
+	icon.BackgroundTransparency = 1
+	icon.Image = tab.Icon
+	icon.ImageColor3 = i == 1 and Color3.fromRGB(220,220,220) or Color3.fromRGB(150,150,150)
+	icon.ZIndex = 2
+
 	local label = Instance.new("TextLabel", button)
 	label.Name = "BaseLabel"
-	label.Size = UDim2.new(1, -15, 1, 0)
-	label.Position = UDim2.new(0, 12, 0, 0)
+	label.Size = UDim2.new(1, -35, 1, 0)
+	label.Position = UDim2.new(0, 32, 0, 0)
 	label.BackgroundTransparency = 1
 	label.Text = tab.Name
 	label.Font = Enum.Font.GothamBold
@@ -730,8 +739,8 @@ for i, tab in ipairs(tabs) do
 	
 	local shineLabel = Instance.new("TextLabel", button)
 	shineLabel.Name = "ShineLabel"
-	shineLabel.Size = UDim2.new(1, -15, 1, 0)
-	shineLabel.Position = UDim2.new(0, 12, 0, 0)
+	shineLabel.Size = UDim2.new(1, -35, 1, 0)
+	shineLabel.Position = UDim2.new(0, 32, 0, 0)
 	shineLabel.BackgroundTransparency = 1
 	shineLabel.Text = tab.Name
 	shineLabel.Font = Enum.Font.GothamBold
@@ -739,7 +748,7 @@ for i, tab in ipairs(tabs) do
 	shineLabel.TextXAlignment = Enum.TextXAlignment.Left
 	shineLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 	shineLabel.ZIndex = 2
-	shineLabel.Visible = true -- TODAS AS TABS TEM BRILHO
+	shineLabel.Visible = true
 	
 	local shineGradient = Instance.new("UIGradient", shineLabel)
 	shineGradient.Transparency = NumberSequence.new{
@@ -753,7 +762,7 @@ for i, tab in ipairs(tabs) do
 	}
 	shineGradient.Offset = Vector2.new(-1.5, 0)
 	
-	tabShines[tab.Name] = {base = label, shine = shineLabel, gradient = shineGradient}
+	tabShines[tab.Name] = {base = label, shine = shineLabel, gradient = shineGradient, icon = icon}
 
 	local page = Instance.new("ScrollingFrame", content)
 	page.Size = UDim2.new(1, 0, 1, 0)
@@ -777,20 +786,24 @@ for i, tab in ipairs(tabs) do
 		for name, ind in pairs(tabIndicators) do
 			ind.Visible = false
 			tabShines[name].base.TextColor3 = Color3.fromRGB(150,150,150)
+			tabShines[name].icon.ImageColor3 = Color3.fromRGB(150,150,150)
 		end
 		indicator.Visible = true
 		label.TextColor3 = Color3.fromRGB(220,220,220)
+		icon.ImageColor3 = Color3.fromRGB(220,220,220)
 	end)
 	
 	button.MouseEnter:Connect(function()
 		if not indicator.Visible then
 			TweenService:Create(label, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(180,180,180)}):Play()
+			TweenService:Create(icon, TweenInfo.new(0.15), {ImageColor3 = Color3.fromRGB(180,180,180)}):Play()
 		end
 	end)
 	
 	button.MouseLeave:Connect(function()
 		if not indicator.Visible then
 			TweenService:Create(label, TweenInfo.new(0.15), {TextColor3 = Color3.fromRGB(150,150,150)}):Play()
+			TweenService:Create(icon, TweenInfo.new(0.15), {ImageColor3 = Color3.fromRGB(150,150,150)}):Play()
 		end
 	end)
 end
@@ -803,12 +816,11 @@ task.spawn(function()
 				Offset = Vector2.new(1.5, 0)
 			}):Play()
 		end
-		task.wait(3)
-		task.wait(3)
+		task.wait(6)
 	end
 end)
 
--- ========= TAB HIGHLIGHTS COMPLETA =========
+-- ========= HIGHLIGHTS =========
 do
     local function aplicarHighlight(obj, cor)
         if not obj then return end
